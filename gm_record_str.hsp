@@ -1,0 +1,130 @@
+/***********************************************************
+
+	任意の区切り文字で区切られた文字列を操作
+
+		【種別：汎用】
+		【2005/07/22 更新】
+
+***********************************************************/
+#module record_and_fields
+
+#define TRUE	1
+#define FALSE	0
+#define NULL	0
+#const MAX_PATH	261
+
+#define global ALL_FIELDS	"-1"
+
+/*--------------------------------------------*/
+/* 指定された区切り文字で区切られた文字列から */
+/* 任意の（あるいはすべての）位置の項目を取り */
+/* 出す。引用符の間の区切り文字は無視。       */
+/*                                            */
+/* p1.0 : 処理対象文字列                      */
+/* p1.1 : 区切り文字（1byte文字のみ。複数可。 */
+/*                    複数の場合連結して格納）*/
+/* p1.2 : 引用符文字（1byte文字のみ。複数可。 */
+/*                    複数の場合連結して格納）*/
+/* p1.3 : 取得する項目番号を表す文字列        */
+/*                  （0‾ または -1（すべて））*/
+/* p2   : 項目内容を入れる戻り値用文字列配列  */
+/*--------------------------------------------*/
+#deffunc split array prms, array items
+	items(0) = ""
+	
+	/* 引用符フラグ初期化（指定された引用符の数だけ） */
+	len = strlen(prms(2))
+	repeat len
+		quotFlags(cnt) = FALSE
+	loop
+	quotFlags(len) = -1
+	
+	/* フィールド取得 */
+	byte =			0	// 処理対象文字列から取得した1byte
+	char =			""	// byteを文字にもどしたもの
+	idxInRec =		0	// 処理対象文字列内の処理中インデックス
+	fldItemIdx =	0	// 処理中の項目番号
+	item = ""			// 取得中の項目
+	repeat
+		byte = peek(prms(0),idxInRec)		// 処理対象文字列から1byte取得
+		idxInRec ++
+		/* レコード文字列の末尾の場合 */
+		if byte=NULL {
+			if item!"" {					// 取得中の項目が空でなければ
+				if prms(3)=ALL_FIELDS {		// 全項目取得の場合
+					items(fldItemIdx) = item		// 取得した項目を戻り値用配列に追加
+					fldItemIdx ++
+				}
+				else {								// 特定項目取得の場合
+					if fldItemIdx=int(prms(3)) {	// 指定項目を取得し終わった
+						items(0) = item				// 取得した項目を戻り値用配列に追加
+;						break						// 処理終了
+					}
+				}
+			}
+			break							// 処理終了
+		}
+		
+		poke char,0,byte					// byteを文字にもどしたものを取得
+		/* 2byte文字の1byte目の場合 */
+		if byte>=127 {
+			item += char
+			byte = peek(prms(0),idxInRec)		// 処理対象文字列から2byte目を取得
+			idxInRec ++
+			poke char,0,byte					// byteを文字にもどしたものを取得
+			goto *@f
+		}
+		/* （その他の場合） */
+		/* 引用符かどうかチェック */
+		i = instr(prms(2),,char)
+		if i!-1 {							// ヒット
+			//----- 該当する引用符フラグを反転
+			if quotFlags(i)=TRUE {
+				quotFlags(i) = FALSE
+			}
+			else {
+				quotFlags(i) = TRUE
+			}
+			//-----
+			goto *@f
+		}
+		/* 区切り文字かどうかチェック */
+		i = instr(prms(1),,char)
+		if i!-1 {							// ヒット
+			/* 引用符内かどうかチェック */
+			flag = FALSE
+			repeat
+				if quotFlags(cnt)=-1 {
+					break
+				}
+				if quotFlags(cnt)=TRUE {
+					flag = TRUE
+					break
+				}
+			loop
+			/* 引用符内ではなかった */
+			if flag=FALSE {
+				/* 次の項目を取得するために処理を継続 */
+				if item!"" {							// 取得中の項目が空でなければ
+					if int(prms(3))=-1 {				// 全項目取得の場合
+						items(fldItemIdx) = item		// 取得した項目を戻り値用配列に追加
+						fldItemIdx ++
+					}
+					else {								// 特定項目取得の場合
+						if fldItemIdx=(int(prms(3))) {	// 指定項目を取得し終わった
+							items(0) = item				// 取得した項目を戻り値用配列に追加
+							break						// 処理終了
+						}
+					}
+					item = ""
+				}
+				continue
+			}
+		}
+*@
+		item += char
+	loop
+return
+
+/**********************************************************/
+#global

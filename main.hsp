@@ -1,0 +1,158 @@
+/***********************************************************
+
+	HSP3コンパイラ "cHspComp" main file
+	
+***********************************************************/
+
+/* コンパイルオプション */
+#packopt name	"chspcomp"
+;#runtime		"hsp3c"
+#packopt runtime "hsp3c.hrt"
+#packopt hide	1
+
+/* 定数 */
+#const TRUE				1
+#const FALSE			0
+
+#define AUTOMAKE_OPT		"m"
+#define DEBUG_INFO_OPT		"i"
+#define DEBUG_SYMBOL_OPT	"d"
+#define DEBUG_WIN_OPT		"w"
+#define LAST_MES_OPT		"e"
+#define OBJ_OBJ_OPT			"o"
+#define OBJ_FILE_OPT		"c"
+#define OBJ_START_OPT		"s"
+#define OBJ_NAME_S			"start.ax"
+#define OBJ_NAME_O			"obj"
+#define OBJ_EXT				".ax"
+;#define LOG_OPT 			"l"
+#define RUN_OPT				"r"
+#define KEYWORD_OPT			"k"
+#define NOT_MACRO_OPT		"h"
+
+#define MES_1		"結果"
+#define MES_2		"を作成しました。"
+#define MES_3		"実行ファイル"
+#define ERR_MES		"エラー"
+#define ERR_MES_1	"指定されたパスのファイルは存在しません。"
+
+/* 汎用モジュール */
+#include "gm_quote.hsp"
+#include "gm_record_str.hsp"
+#include "gm_cmdline.hsp"
+#include "gm_chspcomp.hsp"
+
+/* アプリケーション部品モジュール */
+#include "m_custom_dialog.hsp"
+
+	//------------//
+	// メイン処理 //
+	//------------//
+	
+	/* 最後に行ったコンパイル時の出力メッセージを表示 */
+	if chkopt(LAST_MES_OPT) {			// eオプション？
+		ShowLastMesDialog
+		end
+	}
+	/* HSPのキーワード一覧を表示 */
+	if chkopt(KEYWORD_OPT) {			// kオプション？
+		keywords = chsc_getsym()
+		ShowMesboxDialog keywords,"HSPキーワード一覧"
+		end
+	}
+
+	/* スクリプト、またはオブジェクトファイルのパスを取得 */
+	i = 0
+	p1 = getarg(i)						// 第1引数取得
+	rmquot p1,TYPE_DQUOTE				// ""削除
+	exist p1
+	if strsize=-1 {
+		dialog ERR_MES_1,1,ERR_MES
+		end
+	}
+	/* gm_chspcomp.hsp初期化 */
+	chsc_ini p1
+	/* 拡張子チェック*/
+	ext = getpath(p1,2)
+	if (ext=".as")|(ext=".hsp") {
+		/* スクリプトに埋め込まれた起動オプションを取得 */
+		runopt = ""
+		notesel buf
+		noteload p1
+		noteget linestr,0
+		if instr(linestr,0,";! ")=0 {
+			getstr runopt,linestr,3
+		}
+	}
+	else {
+		goto *_run
+	}
+	
+	/* コンパイル */
+*_comp
+	/* オブジェクトファイル名指定 */
+	if chkopt(OBJ_FILE_OPT) {							// cオプション？
+		objname = getpath(getpath(p1,8),1)+OBJ_EXT
+		goto *@f
+	}
+	if chkopt(OBJ_START_OPT)|chkopt(AUTOMAKE_OPT) {		// sオプション or mオプション？
+		objname = OBJ_NAME_S
+		goto *@f
+	}
+	objname = OBJ_NAME_O
+*@
+	/* コンパイルオプションセット */
+	dbiflag =	chkopt(DEBUG_INFO_OPT)	// デバッグ情報付加指定
+	mode =		AUTO_MAKE_FLAG			// 自動作成フラグセット
+	mode +=		chkopt(NOT_MACRO_OPT)	// 拡張マクロON/OFF設定
+	if chkopt(DEBUG_SYMBOL_OPT) {
+		mode += DEBUG_SYMBOL_FLAG		// デバッグモードシンボルON/OFF設定
+	}
+	dbwflag = 	chkopt(DEBUG_WIN_OPT)	// デバッグウィンドウ表示ON/OFF設定
+	/* コンパイル実行 */
+	if chsc_autocomp(objname,dbiflag,mode,dbwflag)=COMP_ERR {	// 失敗
+		ShowLastMesDialog
+	}
+	/* コンパイルのみの指定なら終了 */
+	if chkopt(OBJ_OBJ_OPT)|chkopt(OBJ_FILE_OPT)|chkopt(OBJ_START_OPT) {
+		dialog objname+MES_2,,MES_1
+		end
+	}
+	/* 実行ファイル作成の指定がなければ実行へ */
+	if chkopt(AUTOMAKE_OPT)=FALSE {		// mオプションなし？
+		goto *_run
+	}
+
+	/* 実行ファイル作成 */
+*_make
+	if chsc_automake()=MAKE_ERR {
+		ShowLastMesDialog
+	}
+	dialog MES_3+MES_2,,MES_1
+	end
+	
+	/* オブジェクトファイル実行 */
+*_run
+	//----- 起動オプション取得
+	if runopt="" {						// スクリプトで起動オプションが指定されていなければ
+		repeat -1,1
+			i = cnt
+			prm = getarg(i)
+			if prm="" {
+				break
+			}
+			if cnt>1 {
+				runopt += " "
+			}
+			runopt += prm
+		loop
+	}
+	//-----
+	if chkopt(DEBUG_WIN_OPT) {			// wオプション？
+		dbwin = TRUE
+	}
+	else {
+		dbwin = FALSE
+	}
+	chsc_run runopt,dbwin
+	end
