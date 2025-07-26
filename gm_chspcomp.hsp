@@ -3,7 +3,7 @@
 	"hspcmp.dll ver.3"ラッパーモジュール
 
 		【種別：汎用】
-		【2005/07/23 更新】
+		【2005/08/17 更新】
 
 		【注】
 		処理対象スクリプトが実行ファイル自動作成に対応して
@@ -14,25 +14,30 @@
 
 #include "hspcmp.as"
 
-/* chsc_autocomp用 */
 #const global DEBUG_INFO		1
 
 #const global NOT_HSP3_MAC_MODE	1
 #const global DEBUG_SYMBOL_FLAG	2
 #const global AUTO_MAKE_FLAG	4
 
-;#const global DEBUG_WIN			1
+/* chsc_savemes */
+#define global CHSC_MESFILE_NAME	"chspcomp.txt"
 
-#define DEF_RTEXENAME			"hsp3.exe"
+/* chsc_getexepath */
 #define DEF_EXENAME				"hsptmp.exe"
 #define EXE_EXT					".exe"
 
+/* chsc_autocomp */
 #const global COMP_OK			0
 #const global COMP_ERR			1
+
+/* chsc_run */
+#define DEF_RTEXENAME			"hsp3.exe"
+
+/* chsc_automake */
 #const global MAKE_OK			0
 #const global MAKE_ERR			1
 
-#define global CHSC_MESFILE_NAME	"chspcomp.txt"
 
 /**********************************************************/
 // モジュール初期化
@@ -42,7 +47,7 @@
 	if (ext=".as")|(ext=".hsp") {
 		mScrname = getpath(targetpath,8)
 		mObjname = ""
-		hsc_ini targetpath
+		hsc_ini mScrname
 	}
 	else {
 		mScrname = ""
@@ -117,53 +122,59 @@
 	return mTargetdir+exename
 
 /**********************************************************/
-// 実行ファイル自動作成時のコンパイル
+// 実行ファイル自動作成向けのコンパイル
 /**********************************************************/
 #defcfunc chsc_autocomp var cmpname, var dbiflag, var cmpmode, var dbwflag
+	chdir mTargetdir
 	/* オブジェクトファイル名指定 */
 	hsc_objname cmpname
 	mObjname = cmpname
 	/* 古いpackfileを削除 */
 	path = mTargetdir+"packfile"
 	exist path	: if strsize>-1	: delete path
+	/* 古いiファイルを削除 */
+	path = mTargetdir+mScrname+".i"
+	exist path	: if strsize>-1	: delete path
 	/* 古いオブジェクトファイルを削除 */
 	path = mTargetdir+cmpname
 	exist path	: if strsize>-1	: delete path
+
+	gPath@ = path			// hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう
+							// とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード
 	/* コンパイル実行 */
-	chdir mTargetdir
 	hsc_clrmes
 	hsc_comp dbiflag,cmpmode,dbwflag
 	chsc_savemes
 	/* 結果チェック */
 	exist path
-	if strsize>-1 {
-			return COMP_OK
+	if strsize=-1 {
+		return COMP_ERR
 	}
-	return COMP_ERR
+	return COMP_OK
 
 /**********************************************************/
 // オブジェクトファイル実行
 /**********************************************************/
-#deffunc chsc_run var runopt, var dbwflag
+#deffunc chsc_run var runopt
 	chdir mTargetdir
 	/* ランタイム名取得 */
-	rtname = ""								// 明示的に文字列変数を用意しないとだめ
-;	path = mTargetdir+mObjname
-	hsc3_getruntime rtname,mObjname			// #runtime命令で指定されたもののみ取得可
+	rtname = ""							// 明示的に文字列変数を用意しないとだめ
+	path = mTargetdir+mObjname
+	hsc3_getruntime rtname,path			// #runtime命令で指定されたもののみ取得可
 	/* コマンドライン生成 */
 	if rtname="" {
 		rtname = DEF_RTEXENAME
 	}
-;	if instr(path,," ")!-1 {
-;		path = "\""+path+"\""
-;	}
+	if instr(path,," ")!-1 {
+		path = "\""+path+"\""
+	}
 	if runopt!"" {
 		runopt = " "+runopt
 	}
-	cline = "\""+dir_exe+"\\"+rtname+"\" "+mObjname+runopt	// 変数に入れないとだめ
+	cline = "\""+dir_exe+"\\"+rtname+"\" "+path+runopt	// 変数に入れないとだめ
 	/* 実行 */
 	hsc_clrmes
-	hsc3_run cline,dbwflag
+	hsc3_run cline
 	chsc_savemes
 	return
 
@@ -173,7 +184,6 @@
 #defcfunc chsc_automake
 	/* 古い実行ファイルを削除 */
 	path = chsc_getexepath()
-;dialog "\""+path+"\"" : end
 	exist path
 	if strsize>-1 {
 		delete path

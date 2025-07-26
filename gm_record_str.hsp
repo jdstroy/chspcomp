@@ -58,7 +58,6 @@
 				else {								// 特定項目取得の場合
 					if fldItemIdx=int(prms(3)) {	// 指定項目を取得し終わった
 						items(0) = item				// 取得した項目を戻り値用配列に追加
-;						break						// 処理終了
 					}
 				}
 			}

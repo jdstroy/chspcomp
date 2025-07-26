@@ -6,7 +6,6 @@
 
 /* コンパイルオプション */
 #packopt name	"chspcomp"
-;#runtime		"hsp3c"
 #packopt runtime "hsp3c.hrt"
 #packopt hide	1
 
@@ -45,6 +44,21 @@
 /* アプリケーション部品モジュール */
 #include "m_custom_dialog.hsp"
 
+	onerror goto *error		// hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう
+	gPath = ""				// とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード。
+							// （このファイルの末尾とgm_chspcomp.hspのchsc_autocomp関数も参照のこと）
+
+	//--------------------//
+	// 重要な変数のリスト //
+	//--------------------//
+
+	p1		= ""			// 第1引数（スクリプトファイルパスorオブジェクトファイルパス）
+	runopt	= ""			// 実行時の起動オプション
+	objname	= ""			// コンパイル時のオブジェクトファイル名
+	dbiflag	= 0				// hsc_comp命令の p1に使用する値
+	cmpmode	= 0				// hsc_comp命令の p2に使用する値
+	dbwflag	= 0				// hsc_comp命令の p3に使用する値
+
 	//------------//
 	// メイン処理 //
 	//------------//
@@ -56,8 +70,7 @@
 	}
 	/* HSPのキーワード一覧を表示 */
 	if chkopt(KEYWORD_OPT) {			// kオプション？
-		keywords = chsc_getsym()
-		ShowMesboxDialog keywords,"HSPキーワード一覧"
+		ShowSymListDialog
 		end
 	}
 
@@ -70,13 +83,12 @@
 		dialog ERR_MES_1,1,ERR_MES
 		end
 	}
-	/* gm_chspcomp.hsp初期化 */
-	chsc_ini p1
+
+	chsc_ini p1							// gm_chspcomp.hsp初期化
 	/* 拡張子チェック*/
 	ext = getpath(p1,2)
 	if (ext=".as")|(ext=".hsp") {
 		/* スクリプトに埋め込まれた起動オプションを取得 */
-		runopt = ""
 		notesel buf
 		noteload p1
 		noteget linestr,0
@@ -90,7 +102,7 @@
 	
 	/* コンパイル */
 *_comp
-	/* オブジェクトファイル名指定 */
+	/* オブジェクトファイル名セット */
 	if chkopt(OBJ_FILE_OPT) {							// cオプション？
 		objname = getpath(getpath(p1,8),1)+OBJ_EXT
 		goto *@f
@@ -102,15 +114,18 @@
 	objname = OBJ_NAME_O
 *@
 	/* コンパイルオプションセット */
-	dbiflag =	chkopt(DEBUG_INFO_OPT)	// デバッグ情報付加指定
-	mode =		AUTO_MAKE_FLAG			// 自動作成フラグセット
-	mode +=		chkopt(NOT_MACRO_OPT)	// 拡張マクロON/OFF設定
-	if chkopt(DEBUG_SYMBOL_OPT) {
-		mode += DEBUG_SYMBOL_FLAG		// デバッグモードシンボルON/OFF設定
+	cmpmode = AUTO_MAKE_FLAG					// 自動作成フラグセット
+	cmpmode += chkopt(NOT_MACRO_OPT)			// 拡張マクロON/OFF設定
+	if chkopt(AUTOMAKE_OPT)=FALSE {				// 実行ファイル作成でなければ
+		dbiflag = chkopt(DEBUG_INFO_OPT)		// デバッグ情報付加指定
+		if chkopt(DEBUG_SYMBOL_OPT) {
+			cmpmode += DEBUG_SYMBOL_FLAG		// デバッグモードシンボルON/OFF設定
+		}
+		dbwflag = chkopt(DEBUG_WIN_OPT)			// デバッグウィンドウ表示ON/OFF設定
 	}
-	dbwflag = 	chkopt(DEBUG_WIN_OPT)	// デバッグウィンドウ表示ON/OFF設定
+
 	/* コンパイル実行 */
-	if chsc_autocomp(objname,dbiflag,mode,dbwflag)=COMP_ERR {	// 失敗
+	if chsc_autocomp(objname,dbiflag,cmpmode,dbwflag)=COMP_ERR {	// 失敗なら
 		ShowLastMesDialog
 	}
 	/* コンパイルのみの指定なら終了 */
@@ -148,11 +163,17 @@
 		loop
 	}
 	//-----
-	if chkopt(DEBUG_WIN_OPT) {			// wオプション？
-		dbwin = TRUE
-	}
-	else {
-		dbwin = FALSE
-	}
-	chsc_run runopt,dbwin
+	chsc_run runopt
+	end
+
+
+/* hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう     */
+/* とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード */
+*error
+	// hsc_comp命令がらみでないようなら即終了
+	if err!38 : dialog "システムエラー: "+err,1,"エラー" : end
+	onerror 0
+	// hspcmp.dllのメッセージを表示してすぐ終了させる
+	chsc_savemes
+	ShowLastMesDialog
 	end
