@@ -3,7 +3,7 @@
 	"hspcmp.dll ver.3"ラッパーモジュール
 
 		【種別：汎用】
-		【2005/08/17 更新】
+		【2005/08/31 更新】
 
 		【注】
 		処理対象スクリプトが実行ファイル自動作成に対応して
@@ -139,8 +139,6 @@
 	path = mTargetdir+cmpname
 	exist path	: if strsize>-1	: delete path
 
-	gPath@ = path			// hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう
-							// とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード
 	/* コンパイル実行 */
 	hsc_clrmes
 	hsc_comp dbiflag,cmpmode,dbwflag
