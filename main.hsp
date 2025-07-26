@@ -5,13 +5,13 @@
 ***********************************************************/
 
 /* コンパイルオプション */
-#packopt name	"chspcomp"
-#packopt runtime "hsp3c.hrt"
-#packopt hide	1
+#packopt name		"chspcomp_"
+#packopt runtime	"hsp3c.hrt"
+#packopt hide		1
 
 /* 定数 */
-#const TRUE				1
-#const FALSE			0
+#const TRUE		1
+#const FALSE	0
 
 #define AUTOMAKE_OPT		"m"
 #define DEBUG_INFO_OPT		"i"
@@ -43,10 +43,6 @@
 
 /* アプリケーション部品モジュール */
 #include "m_custom_dialog.hsp"
-
-	onerror goto *error		// hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう
-	gPath = ""				// とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード。
-							// （このファイルの末尾とgm_chspcomp.hspのchsc_autocomp関数も参照のこと）
 
 	//--------------------//
 	// 重要な変数のリスト //
@@ -164,16 +160,4 @@
 	}
 	//-----
 	chsc_run runopt
-	end
-
-
-/* hsc_comp命令で文法間違いを含むスクリプトをコンパイルしよう     */
-/* とすると、強制終了してしまうhspcmp.dllのバグ回避のためのコード */
-*error
-	// hsc_comp命令がらみでないようなら即終了
-	if err!38 : dialog "システムエラー: "+err,1,"エラー" : end
-	onerror 0
-	// hspcmp.dllのメッセージを表示してすぐ終了させる
-	chsc_savemes
-	ShowLastMesDialog
 	end
