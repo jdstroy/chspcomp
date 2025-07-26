@@ -51,4 +51,5 @@ jobs:
           name: chspcomp
           path: |
             chspcomp.exe
+            chspcompu.ax
           if-no-files-found: error
