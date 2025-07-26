@@ -13,8 +13,8 @@
 
 #module record_and_fields
 
-#const			TRUE		1
-#const			FALSE		0
+#const	TRUE	1
+#const	FALSE	0
 
 #define	global	RECORD_STR_ALL	"-1"
 

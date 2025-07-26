@@ -1,3 +1,4 @@
+;#startscr "main.hsp"
 /***********************************************************
 
 	コマンドライン解析モジュール（cHspComp専用）
@@ -51,9 +52,9 @@
 
 	/* 引数とオプション文字列を取得 */
 	repeat	length(items)
-		if cnt = 0 {
+		if (cnt = 0) {
 			byte	= peek(items(cnt), 0)
-			if byte = CHAR_CODE_OPTION {
+			if (byte = CHAR_CODE_OPTION) {
 				tmpstr		= ""
 				getstr 		tmpstr,items(cnt),1		// オプション指定文字列を取得
 				_options	+= tmpstr
@@ -69,7 +70,7 @@
 // 任意のオプションが指定されているかチェック
 /**********************************************************/
 #defcfunc chkopt str optchar
-	if instr(_options, , optchar) > -1 {
+	if (instr(_options, , optchar) > -1) {
 		return	TRUE
 	}
 	return	FALSE
@@ -78,7 +79,7 @@
 // 指定したインデックスの引数を取得
 /**********************************************************/
 #defcfunc getarg int argi, int rmquote_flag
-	if argi < _argc {
+	if (argi < _argc) {
 		arg	= _args(argi)
 		if rmquote_flag {
 			rmquote	arg, TYPE_DQUOTE@

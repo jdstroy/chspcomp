@@ -11,10 +11,10 @@
 
 #module
 
-#const			NULL				0
+#const	NULL	0
 
-#const	global	TYPE_DQUOTE			1
-#const	global	TYPE_SQUOTE			2
+#const	global	TYPE_DQUOTE		1
+#const	global	TYPE_SQUOTE		2
 
 /**********************************************************/
 // 文字列の両端に同じ種類の引用符が付いていたら、それを削除
@@ -46,7 +46,7 @@
 	}
 
 	p1	= strmid(p1, 1, len-2)
-return	result
+	return	result
 
 /**********************************************************/
 #global
