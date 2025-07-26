@@ -32,7 +32,7 @@
 #module cmdline
 
 	#define	CMDLINE_DELIMITER	" "
-	#define	CHAR_DQUOT			"¥""
+	#define	CHAR_DQUOT			"\""
 	#define	CHAR_CODE_OPTION	'/'
 	#const	TRUE				1
 	#const	FALSE				0

@@ -145,7 +145,7 @@
 	savemesbuf	= _chsc_getmes()
 	if (savemesbuf ! "") {
 		notesel		savemesbuf
-		notesave	(dir_exe + "¥¥" + CHSC_MESFILE_NAME)
+		notesave	(dir_exe + "\\" + CHSC_MESFILE_NAME)
 	}
 	return
 
@@ -226,7 +226,7 @@
 	}
 
 	/* コマンドライン生成 */
-	cmdline	= ("¥"" + dir_exe + "¥¥" + rtname + "¥" " + _objname)	; 変数に入れないとだめ（hsc3_run）
+	cmdline	= ("\"" + dir_exe + "\\" + rtname + "\" " + _objname)	; 変数に入れないとだめ（hsc3_run）
 	if (runopt ! "") {
 		cmdline	+= " " + runopt
 	}
@@ -278,7 +278,7 @@
 			goto	*@f		; 処理続行
 		}
 		byte	= peek(linestr, idx)
-		if ((byte ! ' ') & (byte ! '¥t')) {
+		if ((byte ! ' ') & (byte ! '\t')) {
 			continue		; この行の処理は終了
 		}
 		idx		++
@@ -297,11 +297,11 @@
 		}
 
 		/* 定義値を探す */
-		ppval_idx		=	instr(linestr, offset, "¥"")
+		ppval_idx		=	instr(linestr, offset, "\"")
 		if (ppval_idx = -1) {
 			continue
 		}
-		offset	+=	(ppval_idx + strlen("¥""))
+		offset	+=	(ppval_idx + strlen("\""))
 		getstr	ppval, linestr, offset, '"'
 		ret_ppvals_(ppval_cnt)	= ppval
 
@@ -345,7 +345,7 @@
 
 	/* 実行ファイル作成 */
 	hsc_clrmes
-	hsc3_make	(dir_exe + "¥¥runtime")
+	hsc3_make	(dir_exe + "\\runtime")
 	_chsc_savemes
 
 	/* 実行ファイルの存在を確認 */
@@ -457,17 +457,17 @@
 			_chsc_getppvals (_targetdir + _scrname), "#runtime", "", rtname_2, FALSE
 			if (rtname_2 = "") {	; #runtimeでも指定されていない
 				rtname_2	= "hsprt"
-				rtdirpath	= (dir_exe + "¥¥")
+				rtdirpath	= (dir_exe + "\\")
 			}
 			else {
 				if (getpath(rtname_2, GETPATH_EXT) = "") {
 					rtname_2	+= ".hrt"
 				}
-				rtdirpath	= (dir_exe + "¥¥runtime¥¥")
+				rtdirpath	= (dir_exe + "\\runtime\\")
 			}
 		}
 		else {
-			rtdirpath	= (dir_exe + "¥¥runtime¥¥")
+			rtdirpath	= (dir_exe + "\\runtime\\")
 		}
 
 		/* コンソールランタイムが指定されていたら書き換えは行わない */
@@ -490,7 +490,7 @@
 		filebuf		= ""
 		notesel		filebuf
 		noteload	_tmpscrpath
-		filebuf		+= ("¥n#packopt runtime " + "¥"_" + rtname_2 + "¥"")
+		filebuf		+= ("\n#packopt runtime " + "\"_" + rtname_2 + "\"")
 		notesave	_tmpscrpath
 
 		/* 一時スクリプトをコンパイル対象に設定 */

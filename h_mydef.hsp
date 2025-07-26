@@ -128,7 +128,7 @@
 
 
 	/* 引用符 */
-	#define	DQUOTE	"¥""
+	#define	DQUOTE	"\""
 	#define	SQUOTE	"'"
 
 

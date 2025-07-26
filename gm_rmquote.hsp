@@ -35,7 +35,7 @@
 		result	= TYPE_SQUOTE
 	}
 	else {
-		quote	= "¥""
+		quote	= "\""
 		result	= TYPE_DQUOTE
 	}
 	if instr(p1, 0, quote)!0 {		// 文字列の頭が引用符でない

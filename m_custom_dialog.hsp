@@ -43,7 +43,7 @@
 #deffunc ShowLastMesDialog
 
 	notesel		buf
-	noteload	(dir_exe + "¥¥" + CHSC_MESFILE_NAME@chspcomp)
+	noteload	(dir_exe + "\\" + CHSC_MESFILE_NAME@chspcomp)
 	_ShowMesboxDialog	buf, "結果レポート"
 	return
 
