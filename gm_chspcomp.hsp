@@ -6,8 +6,8 @@
 		【2005/08/31 更新】
 
 		【注】
-		処理対象スクリプトが実行ファイル自動作成に対応して
-		いることが前提。
+		処理対象スクリプトが実行ファイル自動作成用に
+　　　　書かれていることが必要。
 
 ***********************************************************/
 #module chspcomp
@@ -157,19 +157,15 @@
 	chdir mTargetdir
 	/* ランタイム名取得 */
 	rtname = ""							// 明示的に文字列変数を用意しないとだめ
-	path = mTargetdir+mObjname
 	hsc3_getruntime rtname,path			// #runtime命令で指定されたもののみ取得可
 	/* コマンドライン生成 */
 	if rtname="" {
 		rtname = DEF_RTEXENAME
 	}
-	if instr(path,," ")!-1 {
-		path = "¥""+path+"¥""
-	}
 	if runopt!"" {
 		runopt = " "+runopt
 	}
-	cline = "¥""+dir_exe+"¥¥"+rtname+"¥" "+path+runopt	// 変数に入れないとだめ
+	cline = "¥""+dir_exe+"¥¥"+rtname+"¥" "+mObjname+runopt	// 変数に入れないとだめ
 	/* 実行 */
 	hsc_clrmes
 	hsc3_run cline

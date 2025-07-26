@@ -1,3 +1,7 @@
+;! /id "F:¥temp¥hsp3 test¥main.hsp"
+;! /e
+;! "F:¥temp¥hsp3 test¥obj"
+;! /m "F:¥temp¥hsp3 test¥main.hsp"
 /***********************************************************
 
 	HSP3コンパイラ "cHspComp" main file
@@ -5,12 +9,11 @@
 ***********************************************************/
 
 /* コンパイルオプション */
-#packopt name		"chspcomp_"
+#packopt name		"chspcomp"
 #packopt runtime	"hsp3c.hrt"
 #packopt hide		1
 
 /* 定数 */
-#const TRUE		1
 #const FALSE	0
 
 #define AUTOMAKE_OPT		"m"
