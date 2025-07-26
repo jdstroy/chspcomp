@@ -9,7 +9,7 @@
 			gm_record_str.hsp
 
 ***********************************************************/
-#module cmdline; args,argc,options
+#module cmdline
 
 #define CMDLINE_DELIMITER	" "
 #define CHAR_DQUOT			"¥""
