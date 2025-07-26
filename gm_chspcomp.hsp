@@ -203,11 +203,17 @@
 #deffunc chsc_run str runopt_
 
 	/* 起動オプション（コマンドラインパラメータ）の選択 */
-	if (_runopt = "") {
-		runopt	= runopt_					; コマンドラインで指定されたもの
+;	if (_runopt = "") {
+;		runopt	= runopt_					; コマンドラインで指定されたもの
+;	}
+;	else {
+;		runopt	= _runopt					; スクリプトに埋め込まれていたもの
+;	}
+	if (runopt_ = "") {
+		runopt	= _runopt					; スクリプトに埋め込まれていたもの
 	}
 	else {
-		runopt	= _runopt					; スクリプトに埋め込まれていたもの
+		runopt	= runopt_					; コマンドラインで指定されたもの
 	}
 
 	chdir	_targetdir
