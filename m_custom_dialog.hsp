@@ -23,6 +23,7 @@
 	mesbox msg,DLG_WID,DLG_HEI,0
 	stop
 	return
+
 #global
 
 /**********************************************************/
@@ -33,6 +34,7 @@
 	noteload dir_exe+"\\"+CHSC_MESFILE_NAME@
 	ShowMesboxDialog buf,"結果レポート"
 	return
+
 #global
 
 /**********************************************************/
@@ -42,6 +44,7 @@
 	list = chsc_getsym()
 	ShowMesboxDialog list,"HSPキーワード一覧"
 	return
+
 #global
 
 ;/**********************************************************/↓古いコード
