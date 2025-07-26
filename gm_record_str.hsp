@@ -12,6 +12,7 @@
 
 
 #module record_and_fields
+#undef split
 
 #const	TRUE	1
 #const	FALSE	0
