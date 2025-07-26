@@ -1,0 +1,202 @@
+/***********************************************************
+
+	"hspcmp.dll ver.3"ラッパーモジュール
+
+		【種別：汎用】
+		【2005/07/23 更新】
+
+		【注】
+		処理対象スクリプトが実行ファイル自動作成に対応して
+		いることが前提。
+
+***********************************************************/
+#module chspcomp
+
+#include "hspcmp.as"
+
+/* chsc_autocomp用 */
+#const global DEBUG_INFO		1
+
+#const global NOT_HSP3_MAC_MODE	1
+#const global DEBUG_SYMBOL_FLAG	2
+#const global AUTO_MAKE_FLAG	4
+
+;#const global DEBUG_WIN			1
+
+#define DEF_RTEXENAME			"hsp3.exe"
+#define DEF_EXENAME				"hsptmp.exe"
+#define EXE_EXT					".exe"
+
+#const global COMP_OK			0
+#const global COMP_ERR			1
+#const global MAKE_OK			0
+#const global MAKE_ERR			1
+
+#define global CHSC_MESFILE_NAME	"chspcomp.txt"
+
+/**********************************************************/
+// モジュール初期化
+/**********************************************************/
+#deffunc chsc_ini var targetpath
+	ext = getpath(targetpath,2)
+	if (ext=".as")|(ext=".hsp") {
+		mScrname = getpath(targetpath,8)
+		mObjname = ""
+		hsc_ini targetpath
+	}
+	else {
+		mScrname = ""
+		mObjname = getpath(targetpath,8)
+	}
+	mTargetdir = getpath(targetpath,32)	// スクリプトまたはオブジェクトファイルがあるフォルダを取得（"\"付き）
+	return
+
+/**********************************************************/
+// コンパイラからのメッセージを取得
+/**********************************************************/
+#defcfunc chsc_getmes
+	hsc3_messize len
+	sdim buf,len+1
+	hsc_getmes buf
+	return buf
+
+/**********************************************************/
+// コンパイラからのメッセージを保存
+/**********************************************************/
+#deffunc chsc_savemes
+	savebuf = chsc_getmes()
+	if savebuf!"" {
+		notesel savebuf
+		notesave dir_exe+"\\"+CHSC_MESFILE_NAME
+	}
+	return
+
+/**********************************************************/
+// スクリプトで指定されている実行ファイル名を含むパスを取得
+/**********************************************************/
+#defcfunc chsc_getexepath
+	/* スクリプト読み込み */
+	scrpath = mTargetdir+mScrname
+	notesel scrbuf
+	noteload scrpath
+	/* 実行ファイル名検索 */
+	exename = ""
+	repeat noteinfo(0)
+		linestr = ""
+		noteget linestr,cnt
+		if linestr="" {
+			continue
+		}
+		/* "#packopt"を探す */
+		i = instr(linestr,0,"#packopt")
+		if i=-1 {
+			continue
+		}
+		i += 8								// 8=strlen("#packopt")
+		/* "name"と実行ファイル名を探す */
+		i2 = instr(linestr,i,"name")
+		if i2=-1 {							// "name"がない	
+			continue
+		}
+		i3 = instr(linestr,i,"\"")
+		if i2>i3 {							// "\""の前に"name"がない
+			continue
+		}
+		i3 += 8+1							// 8=strlen("#packopt"), 1=strlen("\"")
+		getstr exename,linestr,i3,'"'
+		break
+	loop
+	if exename="" {
+		exename = DEF_EXENAME
+	}
+	else {
+		if getpath(exename,2)!EXE_EXT {
+			exename += EXE_EXT
+		}
+	}
+	return mTargetdir+exename
+
+/**********************************************************/
+// 実行ファイル自動作成時のコンパイル
+/**********************************************************/
+#defcfunc chsc_autocomp var cmpname, var dbiflag, var cmpmode, var dbwflag
+	/* オブジェクトファイル名指定 */
+	hsc_objname cmpname
+	mObjname = cmpname
+	/* 古いpackfileを削除 */
+	path = mTargetdir+"packfile"
+	exist path	: if strsize>-1	: delete path
+	/* 古いオブジェクトファイルを削除 */
+	path = mTargetdir+cmpname
+	exist path	: if strsize>-1	: delete path
+	/* コンパイル実行 */
+	chdir mTargetdir
+	hsc_clrmes
+	hsc_comp dbiflag,cmpmode,dbwflag
+	chsc_savemes
+	/* 結果チェック */
+	exist path
+	if strsize>-1 {
+			return COMP_OK
+	}
+	return COMP_ERR
+
+/**********************************************************/
+// オブジェクトファイル実行
+/**********************************************************/
+#deffunc chsc_run var runopt, var dbwflag
+	chdir mTargetdir
+	/* ランタイム名取得 */
+	rtname = ""								// 明示的に文字列変数を用意しないとだめ
+;	path = mTargetdir+mObjname
+	hsc3_getruntime rtname,mObjname			// #runtime命令で指定されたもののみ取得可
+	/* コマンドライン生成 */
+	if rtname="" {
+		rtname = DEF_RTEXENAME
+	}
+;	if instr(path,," ")!-1 {
+;		path = "\""+path+"\""
+;	}
+	if runopt!"" {
+		runopt = " "+runopt
+	}
+	cline = "\""+dir_exe+"\\"+rtname+"\" "+mObjname+runopt	// 変数に入れないとだめ
+	/* 実行 */
+	hsc_clrmes
+	hsc3_run cline,dbwflag
+	chsc_savemes
+	return
+
+/**********************************************************/
+// 実行ファイル自動作成
+/**********************************************************/
+#defcfunc chsc_automake
+	/* 古い実行ファイルを削除 */
+	path = chsc_getexepath()
+;dialog "\""+path+"\"" : end
+	exist path
+	if strsize>-1 {
+		delete path
+	}
+	/* 実行ファイル作成 */
+	hsc_clrmes
+	hsc3_make dir_exe+"\\runtime"
+	chsc_savemes
+	/* 実行ファイルの存在を確認 */
+	exist path
+	if strsize=-1 {
+		return MAKE_ERR
+	}
+	return MAKE_OK
+
+/**********************************************************/
+// キーワード一覧を取得
+/**********************************************************/
+#defcfunc chsc_getsym
+	hsc_clrmes
+	hsc3_getsym
+	keywords = chsc_getmes()
+	return keywords
+
+/**********************************************************/
+#global

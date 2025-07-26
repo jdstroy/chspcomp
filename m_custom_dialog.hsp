@@ -1,0 +1,113 @@
+/***********************************************************
+
+	「HSPCMP.DLLからのメッセージを表示するためのダイアログ」
+	（「履歴付き実行用ダイアログ」）
+	を表示
+
+***********************************************************/
+#module
+
+#define DLG_FONT_NAME	"ＭＳ ゴシック"
+#const DLG_FONT_SIZE	12
+#const DLG_WID			400
+#const DLG_HEI			200
+
+#deffunc ShowMesboxDialog var msg, str cap
+	posx = ginfo(20)/2-DLG_WID/2
+	posy = ginfo(21)/2-DLG_HEI/2
+	screen 2,DLG_WID,DLG_HEI,1,posx,posy
+	title cap
+	
+	font DLG_FONT_NAME,DLG_FONT_SIZE
+	objmode 2,1
+	mesbox msg,DLG_WID,DLG_HEI,0
+	stop
+	return
+#global
+
+/**********************************************************/
+#module last_mes_dlg
+
+;#define LAST_MES_FILE_NAME "chspcomp.txt"
+
+#deffunc ShowLastMesDialog
+	notesel buf
+	noteload dir_exe+"\\"+CHSC_MESFILE_NAME@
+	ShowMesboxDialog buf,"結果レポート"
+	return
+#global
+
+;/**********************************************************/↓古いコード
+;#module run_with_log_dlg
+;
+;#define DLG_FONT_NAME	"ＭＳ ゴシック"
+;#const DLG_FONT_SIZE	12
+;#const DLG_WID			350
+;#const DLG_HEI			155
+;
+;#deffunc ShowRunWithLogDialog var pOptstr, var pNotClearFlag
+;;	mref pOptionStr , 24
+;;	mref pNotClearFlag , 17
+;
+;	posx = dispx/2-DLG_WID/2
+;	posy = dispy/2-DLG_HEI/2
+;
+;	screen 2,DLG_WID,DLG_HEI,0,posx,posy
+;	title "履歴付き実行"
+;	cls 1
+;	font DLG_FONT_NAME,DLG_FONT_SIZE
+;	objmode 2,1
+;	pos 10,10
+;	mes {"
+;実行ログファイル"hsplog.txtを生成
+;しながら実行します。
+;
+;以下の項目をログに付加できます。
+;"}
+;
+;	lineIdxFlag = 1
+;	timeFlag = 1
+;	dateFlag = 1
+;	fileNameFlag = 1
+;	notClearFlag = 1
+;	pos 10,60		: chkbox "行番号",lineIdxFlag
+;	pos 70,60		: chkbox "時刻",timeFlag
+;	pos 10,84		: chkbox "日付",dateFlag
+;	objsize 80,		: pos 70,84		: chkbox "ファイル名",fileNameFlag
+;	objsize 210,	: pos 10,120	: chkbox "前回の履歴をクリアしない（追記）",notClearFlag
+;
+;	objsize 100,25
+;	pos 230,20	: button "実行開始",*Start
+;	pos 230,60	: button "キャンセル",*Cancel
+;	pos 230,100	: button "ログ編集",*EditLog
+;	stop
+;
+;*Start
+;	tmp = 0
+;	if lineIdxFlag=1 {
+;		tmp ++
+;	}
+;	if timeFlag=1 {
+;		tmp += 2
+;	}
+;	if dateFlag=1 {
+;		tmp += 4
+;	}
+;	if fileNameFlag=1 {
+;		tmp += 8
+;	}
+;;	str tmp,3
+;	tmp = strf("[%03d]",tmp)
+;	pOptstr = "%"+tmp
+;	pNotClearFlag = notClearFlag
+;	goto *@f
+;*Cancel
+;	pOptstr = "cancel"
+;	goto *@f
+;*EditLog
+;	pOptstr = "editlog"
+;*@
+;	return
+;#global
+;
+/**********************************************************/
