@@ -1,0 +1,151 @@
+///////////////////////////////////////////////////////////////////
+//                                                               //
+// 自作アプリケーション用共通 定数マクロ・汎用関数・サブルーチン //
+//                                                               //
+// 【2007/05/16 更新】                                           //
+//                                                               //
+///////////////////////////////////////////////////////////////////
+#ifndef	__H_MYDEF__
+#define	global	__H_MYDEF__
+
+
+	MYDIR	= dir_cur					// 起動ディレクトリ
+
+
+	#const	TRUE		1
+	#const	FALSE		0
+	#const	NULL		0
+	#const	OK			0
+	#const	ERROR		-1
+
+	#const	MAX_PATH	260
+
+
+	/* ダイアログタイプ */
+	#const	DLG_TYPE_STD			0	// 標準＋[OK]
+	#const	DLG_TYPE_ALERT			1	// 警告＋[OK]
+	#const	DLG_TYPE_STD_YESNO		2	// 標準＋[はい][いいえ]
+	#const	DLG_TYPE_ALERT_YESNO	3	// 警告＋[はい][いいえ]
+	#const	DLG_TYPE_FILE_OPEN		16	// ファイルOPEN(開く)
+	#const	DLG_TYPE_FILE_SAVE		17	// ファイルSAVE(保存)
+	#const	DLG_TYPE_COLOR_PAL		32	// カラー選択(固定色)
+	#const	DLG_TYPE_COLOR_RGB		33	// カラー選択(RGBを自由に選択)
+
+	/* ダイアログキャプション */
+	#define	DLG_TITLE_1	"処理結果"
+	#define	DLG_TITLE_2	"確認"
+	#define	DLG_TITLE_3	"エラー"
+
+	/* エラーメッセージ */
+	#define	ERR_MES_0	"エラー"
+	#define	ERR_MES_1	"を終了します。"
+	#define	ERR_MES_2	"に失敗しました。"
+
+
+	/* アプリケーション名、バージョン文字列 */
+	#define	NAME_APP	"cHspComp"		// アプリケーションごとに書き換え
+	#define	STR_APP_VER	"v.0.4.0"
+
+
+	/* dirlist命令用 */
+	#define	DIRLIST_MASK_ALL		"*.*"
+
+	#const	DIRLIST_MD_ALL			0	// すべてのファイル
+	#const	DIRLIST_MD_FILE			1	// ディレクトリを除くすべてのファイル
+	#const	DIRLIST_MD_NOTSYS		2	// 隠し属性・システム属性を除くすべてのファイル
+	#const	DIRLIST_MD_NOTDIRSYS	3	// ディレクトリ・隠し属性・システム属性以外のすべてのファイル
+	#const	DIRLIST_MD_DIR			5	// ディレクトリのみ
+	#const	DIRLIST_MD_SYS			6	// 隠し属性・システム属性ファイルのみ
+	#const	DIRLIST_MD_DIRSYS		7	// ディレクトリと隠し属性・システム属性ファイルのみ
+
+	/* getpath命令用 */
+	#const	GETPATH_COPY		0	// コピー
+	#const	GETPATH_NAME		1	// 拡張子を除くファイル名
+	#const	GETPATH_EXT			2	// 拡張子のみ(.???)
+	#const	GETPATH_REMDIR		8	// ディレクトリ情報を取り除く
+	#const	GETPATH_LOWCASE		16	// 文字列を小文字に変換する
+	#const	GETPATH_DIR			32	// ディレクトリ情報のみ
+
+	/* vartype命令用 */
+	#const	VARTYPE_STR		2	// 文字列型
+	#const	VARTYPE_FLOAT	3	// 実数型
+	#const	VARTYPE_INT		4	// 整数型
+	#const	VARTYPE_MOD		5	// モジュール型
+
+	/* exec命令用 */
+	#const	EXECMODE_NORMAL		0	// 通常
+	#const	EXECMODE_MINIMIZE	2	// 最小化モード
+	#const	EXECMODE_ASSOC		16	// 関連付けされたアプリケーション
+	#const	EXECMODE_PRINT		32	// 指定したファイルを印刷
+
+	/* gettime命令用 */
+	#const	GETTIME_YEAR		0
+	#const	GETTIME_MONTH		1
+	#const	GETTIME_DOW			2
+	#const	GETTIME_DAY			3
+	#const	GETTIME_HOUR		4
+	#const	GETTIME_MINUTE		5
+	#const	GETTIME_SECOND		6
+	#const	GETTIME_MILISEC		7
+
+	/* gsel命令用 */
+	#const	GSEL_SELECT			0
+	#const	GSEL_ACTIVE			1
+	#const	GSEL_FOREGROUND		2
+	#const	GSEL_HIDE			-1
+
+	/* sysexit命令用 */
+	#const	SYSEXIT_LOGOFF		0
+	#const	SYSEXIT_REBOOT		1
+	#const	SYSEXIT_SHUTDOWN	2
+	#const	SYSEXIT_POWEROFF	3
+
+
+	/* 引用符 */
+	#define	DQUOTE	"\""
+	#define	SQUOTE	"'"
+
+
+	/****************************/
+	/* ウィンドウメッセージ関連 */
+	/****************************/
+	/* ユーザ定義メッセージの範囲（定数名はオリジナル） */
+	#const	WM_USER_APP_PRIVATE_START	0x8000		// アプリケーション・プライベート
+	#const	WM_USER_APP_PRIVATE_END		0xbfff
+
+
+	/**************************/
+	/* 汎用関数・サブルーチン */
+	/**************************/
+
+	/* 4バイトintからワードを得る */
+	#module
+		/* 上位ワード */
+		#defcfunc hiword	int dword
+			return	(dword >> 16) & 0xFFFF
+
+		/* 下位ワード */
+		#defcfunc loword	int dword
+			return	dword & 0xFFFF
+	#global
+
+
+	/* 指定されたIDのウィンドウをデスクトップの中央に移動する */
+	#module
+		#deffunc center_win	int winid
+			/* 現在のウィンドウIDを保存して、移動対象のウィンドウを選択 */
+			winid_cur	= ginfo_sel
+			gsel	winid, GSEL_SELECT
+			
+			/* 移動先座標を計算して、そこに移動 */
+			x	= (ginfo_dispx - ginfo_sizex) /2
+			y	= (ginfo_dispy - ginfo_sizey) /2
+			width	,, x, y
+			
+			/* 元のウィンドウIDを選択 */
+			gsel	winid_cur, GSEL_SELECT
+			return
+	#global
+
+
+#endif

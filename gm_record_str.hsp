@@ -1,18 +1,22 @@
 /***********************************************************
 
-	任意の区切り文字で区切られた文字列を操作
+	任意の区切り文字で区切られた文字列を操作するモジュール
 
-		【2005/07/22 更新】
+		（シフトJIS専用）
+
+		【2006/10/3 更新】
 
 ***********************************************************/
+#ifndef	__GM_RECORD_AND_FIELDS__
+	#define	global	__GM_RECORD_AND_FIELDS__
+
+
 #module record_and_fields
 
-#define TRUE	1
-#define FALSE	0
-#define NULL	0
-#const MAX_PATH	261
+#const			TRUE		1
+#const			FALSE		0
 
-#define global ALL_FIELDS	"-1"
+#define	global	RECORD_STR_ALL	"-1"
 
 /*--------------------------------------------*/
 /* 指定された区切り文字で区切られた文字列から */
@@ -29,7 +33,10 @@
 /* p2   : 項目内容を入れる戻り値用文字列配列  */
 /*--------------------------------------------*/
 #deffunc split array prms, array items
-	items(0) = ""
+
+	repeat length(items)
+		items(cnt) = ""
+	loop
 	
 	/* 引用符フラグ初期化（指定された引用符の数だけ） */
 	len = strlen(prms(2))
@@ -50,7 +57,7 @@
 		/* レコード文字列の末尾の場合 */
 		if byte=NULL {
 			if item!"" {					// 取得中の項目が空でなければ
-				if prms(3)=ALL_FIELDS {		// 全項目取得の場合
+				if prms(3)=RECORD_STR_ALL {		// 全項目取得の場合
 					items(fldItemIdx) = item		// 取得した項目を戻り値用配列に追加
 					fldItemIdx ++
 				}
@@ -124,5 +131,7 @@
 	loop
 return
 
-/**********************************************************/
 #global
+
+
+#endif
