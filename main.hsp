@@ -1,7 +1,3 @@
-;! /id "F:¥temp¥hsp3 test¥main.hsp"
-;! /e
-;! "F:¥temp¥hsp3 test¥obj"
-;! /m "F:¥temp¥hsp3 test¥main.hsp"
 /***********************************************************
 
 	HSP3コンパイラ "cHspComp" main file
@@ -14,7 +10,7 @@
 #packopt hide		1
 
 /* 定数 */
-#const FALSE	0
+#include "h_mydef.hsp"
 
 #define AUTOMAKE_OPT		"m"
 #define DEBUG_INFO_OPT		"i"
@@ -24,44 +20,42 @@
 #define OBJ_OBJ_OPT			"o"
 #define OBJ_FILE_OPT		"c"
 #define OBJ_START_OPT		"s"
-#define OBJ_NAME_S			"start.ax"
-#define OBJ_NAME_O			"obj"
-#define OBJ_EXT				".ax"
-;#define LOG_OPT 			"l"
 #define RUN_OPT				"r"
 #define KEYWORD_OPT			"k"
 #define NOT_MACRO_OPT		"h"
 
-#define MES_1		"結果"
 #define MES_2		"を作成しました。"
 #define MES_3		"実行ファイル"
-#define ERR_MES		"エラー"
-#define ERR_MES_1	"指定されたパスのファイルは存在しません。"
+#define ERR_MES_10	"指定されたパスのファイルは存在しません。"
 
 /* 汎用モジュール */
-#include "gm_quote.hsp"
-#include "gm_record_str.hsp"
-#include "gm_cmdline.hsp"
 #include "gm_chspcomp.hsp"
 
 /* アプリケーション部品モジュール */
+#include "m_cmdline.hsp"
 #include "m_custom_dialog.hsp"
 
-	//--------------------//
-	// 重要な変数のリスト //
-	//--------------------//
+	//------------------------------------------------------------
+	// 重要な変数のリスト
+	//------------------------------------------------------------
 
-	p1		= ""			// 第1引数（スクリプトファイルパスorオブジェクトファイルパス）
-	runopt	= ""			// 実行時の起動オプション
-	objname	= ""			// コンパイル時のオブジェクトファイル名
-	dbiflag	= 0				// hsc_comp命令の p1に使用する値
-	cmpmode	= 0				// hsc_comp命令の p2に使用する値
-	dbwflag	= 0				// hsc_comp命令の p3に使用する値
+	_filepath		= ""			// chspcomp起動コマンドラインの第1引数
+									// （スクリプトファイルパスorオブジェクトファイルパス）
+	_runopt			= ""			// 実行時の起動オプション
+	_objname		= ""			// コンパイル時のオブジェクトファイル名
+	_dbinfo_flag	= 0				// hsc_comp命令の p1に使用する値
+	_cmpmode		= 0				// hsc_comp命令の p2に使用する値
+	_dbwin_flag		= 0				// hsc_comp命令の p3に使用する値
 
-	//------------//
-	// メイン処理 //
-	//------------//
-	
+
+	//------------------------------------------------------------
+	// メイン処理
+	//------------------------------------------------------------
+
+	/******************/
+	/* 下準備、その他 */
+	/******************/
+
 	/* 最後に行ったコンパイル時の出力メッセージを表示 */
 	if chkopt(LAST_MES_OPT) {			// eオプション？
 		ShowLastMesDialog
@@ -74,93 +68,111 @@
 	}
 
 	/* スクリプト、またはオブジェクトファイルのパスを取得 */
-	i = 0
-	p1 = getarg(i)						// 第1引数取得
-	rmquot p1,TYPE_DQUOTE				// ""削除
-	exist p1
-	if strsize=-1 {
-		dialog ERR_MES_1,1,ERR_MES
+	_filepath	= getarg(0, TRUE@)				// 第1引数取得
+	exist	_filepath
+	if strsize = -1 {
+		dialog	ERR_MES_10, 1, ERR_MES_0@
 		end
 	}
 
-	chsc_ini p1							// gm_chspcomp.hsp初期化
+	/* gm_chspcomp.hsp初期化 */
+	if chkopt(AUTOMAKE_OPT) {
+		chsc_ini	_filepath, TRUE@
+	}
+	else {
+		chsc_ini	_filepath, FALSE@
+	}
+
 	/* 拡張子チェック*/
-	ext = getpath(p1,2)
-	if (ext=".as")|(ext=".hsp") {
+	ext	= getpath(getpath(_filepath, GETPATH_EXT@), GETPATH_LOWCASE@)
+	if (ext = ".as") | (ext = ".hsp") {
 		/* スクリプトに埋め込まれた起動オプションを取得 */
-		notesel buf
-		noteload p1
-		noteget linestr,0
-		if instr(linestr,0,";! ")=0 {
-			getstr runopt,linestr,3
+		notesel		buf
+		noteload	_filepath
+		noteget		linestr, 0
+		if instr(linestr, 0, ";! ") = 0 {
+			getstr	_runopt, linestr, 3
 		}
 	}
 	else {
 		goto *_run
 	}
 	
+	/**************/
 	/* コンパイル */
+	/**************/
 *_comp
 	/* オブジェクトファイル名セット */
 	if chkopt(OBJ_FILE_OPT) {							// cオプション？
-		objname = getpath(getpath(p1,8),1)+OBJ_EXT
+		_objname	= getpath(getpath(_filepath, 8), 1) + OBJ_EXT@chspcomp
 		goto *@f
 	}
-	if chkopt(OBJ_START_OPT)|chkopt(AUTOMAKE_OPT) {		// sオプション or mオプション？
-		objname = OBJ_NAME_S
+	if chkopt(OBJ_START_OPT) | chkopt(AUTOMAKE_OPT) {	// sオプション or mオプション？
+		_objname	= OBJ_NAME_S@chspcomp
 		goto *@f
 	}
-	objname = OBJ_NAME_O
+	_objname	= OBJ_NAME_O@chspcomp
+
 *@
 	/* コンパイルオプションセット */
-	cmpmode = AUTO_MAKE_FLAG					// 自動作成フラグセット
-	cmpmode += chkopt(NOT_MACRO_OPT)			// 拡張マクロON/OFF設定
-	if chkopt(AUTOMAKE_OPT)=FALSE {				// 実行ファイル作成でなければ
-		dbiflag = chkopt(DEBUG_INFO_OPT)		// デバッグ情報付加指定
+	_cmpmode	= AUTO_MAKE_FLAG@chspcomp			// 自動作成フラグセット
+	if chkopt(NOT_MACRO_OPT) {						// 拡張マクロON/OFF設定
+		_cmpmode	+= NO_HSP3_MACRO@chspcomp
+	}
+
+	if chkopt(AUTOMAKE_OPT) = FALSE@ {				// 実行ファイル作成でなければ
+		_dbinfo_flag	= chkopt(DEBUG_INFO_OPT)		// デバッグ情報付加指定
 		if chkopt(DEBUG_SYMBOL_OPT) {
-			cmpmode += DEBUG_SYMBOL_FLAG		// デバッグモードシンボルON/OFF設定
+			_cmpmode	+= DEBUG_SYMBOL_FLAG@chspcomp		// デバッグモードシンボルON/OFF設定
 		}
-		dbwflag = chkopt(DEBUG_WIN_OPT)			// デバッグウィンドウ表示ON/OFF設定
+		_dbwin_flag		= chkopt(DEBUG_WIN_OPT)			// デバッグウィンドウ表示ON/OFF設定
 	}
 
 	/* コンパイル実行 */
-	if chsc_autocomp(objname,dbiflag,cmpmode,dbwflag)=COMP_ERR {	// 失敗なら
+	chsc_autocomp	_objname, _dbinfo_flag, _cmpmode, _dbwin_flag
+	if stat = COMP_ERR@chspcomp {		// 失敗
 		ShowLastMesDialog
 	}
+
 	/* コンパイルのみの指定なら終了 */
-	if chkopt(OBJ_OBJ_OPT)|chkopt(OBJ_FILE_OPT)|chkopt(OBJ_START_OPT) {
-		dialog objname+MES_2,,MES_1
+	if chkopt(OBJ_OBJ_OPT) | chkopt(OBJ_FILE_OPT) | chkopt(OBJ_START_OPT) {
+		dialog (_objname + MES_2), , DLG_TITLE_1@
 		end
 	}
+
 	/* 実行ファイル作成の指定がなければ実行へ */
-	if chkopt(AUTOMAKE_OPT)=FALSE {		// mオプションなし？
+	if chkopt(AUTOMAKE_OPT) = FALSE@ {				// mオプションなし？
 		goto *_run
 	}
 
+	/********************/
 	/* 実行ファイル作成 */
+	/********************/
 *_make
-	if chsc_automake()=MAKE_ERR {
+	chsc_automake TRUE@
+	if stat = MAKE_ERR@chspcomp {
 		ShowLastMesDialog
 	}
-	dialog MES_3+MES_2,,MES_1
+	dialog MES_3 + MES_2, , DLG_TITLE_1@
 	end
 	
+	/****************************/
 	/* オブジェクトファイル実行 */
+	/****************************/
 *_run
-	//----- 起動オプション取得
-	if runopt="" {						// スクリプトで起動オプションが指定されていなければ
-		repeat -1,1
-			i = cnt
-			prm = getarg(i)
-			if prm="" {
+	/* 起動オプション取得 */
+	if _runopt = "" {					// スクリプト内で起動オプションが指定されていなければ
+		repeat -1, 1
+			prm	= getarg(cnt, FALSE@)
+			if prm = "" {
 				break
 			}
-			if cnt>1 {
-				runopt += " "
+			if cnt > 1 {
+				_runopt	+= " "
 			}
-			runopt += prm
+			_runopt	+= prm
 		loop
 	}
-	//-----
-	chsc_run runopt
+	/* 実行 */
+	chsc_run	_runopt
 	end

@@ -1,0 +1,55 @@
+/***********************************************************
+
+	文字列の両端の引用符を削除
+
+		【2006/10/20 更新】
+
+***********************************************************/
+#ifndef	__GM_RMQUOTE__
+	#define	global	__GM_RMQUOTE__
+
+
+#module
+
+#const			NULL				0
+
+#const	global	TYPE_DQUOTE			1
+#const	global	TYPE_SQUOTE			2
+
+/**********************************************************/
+// 文字列の両端に同じ種類の引用符が付いていたら、それを削除
+/**********************************************************/
+#deffunc rmquote var p1, int p2
+	// p1 :		処理対象文字列
+	// p2 :		削除する引用符の種類。TYPE_DQUOTEかTYPE_SQUOTEを指定する。
+	// 戻り値 :	削除された引用符の種類（TYPE_DQUOTEかTYPE_SQUOTE）がstatに代入される。
+	//			削除されなければ0が代入される。
+
+	len = strlen(p1)
+	if len<2 {
+		return NULL
+	}
+
+	if p2=TYPE_SQUOTE {
+		quote	= "'"
+		result	= TYPE_SQUOTE
+	}
+	else {
+		quote	= "¥""
+		result	= TYPE_DQUOTE
+	}
+	if instr(p1, 0, quote)!0 {		// 文字列の頭が引用符でない
+		return NULL
+	}
+	if instr(p1, len-1, quote)!0 {	// 文字列の末尾が引用符でない
+		return NULL
+	}
+
+	p1	= strmid(p1, 1, len-2)
+return	result
+
+/**********************************************************/
+#global
+
+
+#endif
