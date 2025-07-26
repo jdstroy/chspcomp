@@ -2,30 +2,30 @@
 
 	HRTアイコン書き換え用モジュール
 
-		【2007/08/18 更新】
+		【2007/12/24 更新】
 
 		【命令一覧】
 
 		HRTファイルのアイコンを書き換え（既存のアイコンは削除）
 
-			#deffunc update_hrt_icon str hrtpath_, array ico_paths_
+;			#deffunc update_hrt_icon str hrtpath_, array icopaths_
 
 				hrtpath_	: HRTファイルパス
 							  今のところ、hsprt, hsp3c.hrt, hsp3hg.hrtにのみ対応
 
-				ico_paths_	: 追加するアイコンファイルパスの配列
+				icopaths_	: 追加するアイコンファイルパスの配列
 							  指定できるアイコンファイルは1ファイル1アイコンのもののみ
 
 ***********************************************************/
-#ifndef	__M_HRT_ICON__
-#define	global	__M_HRT_ICON__
+#ifndef	__GM_HRT_ICON__
+#define	global	__GM_HRT_ICON__
 
 #include "kernel32.as"
 
 #module
 
-	#const	GETPATH_REMDIR		8	// ディレクトリ情報を取り除く
-	#const	GETPATH_LOWCASE		16	// 文字列を小文字に変換する
+	#const	GETPATH_REMDIR			8		; ディレクトリ情報を取り除く
+	#const	GETPATH_LOWCASE			16		; 文字列を小文字に変換する
 
 	#const	ERROR_HRT_NOT_EXIST		1
 	#const	ERROR_ICO_NOT_EXIST		2
@@ -41,8 +41,8 @@
 
 	#const	HSPEXE_ICON_ID			1		; デフォルトの実行ファイルアイコンのID
 	#const	HSPEXE_GROUPICON_ID		128		; デフォルトのGROUP_ICONリソースのID
-	#const	LANG_ID_EN			1033
-	#const	LANG_ID_JP			1041
+	#const	LANG_ID_EN				1033
+	#const	LANG_ID_JP				1041
 
 	#const	RSRCTYPE_ICON			1
 
@@ -51,10 +51,10 @@
 	#const	ICONDIR_TYPE_OFFSET		2
 	#const	ICONDIR_COUNT_OFFSET	4
 	#const	ICONDIRENTRY_SIZE		16
-	#const	ICONDIR_TALBLE_SIZE		(ICONDIR_BASE_SIZE + ICONDIRENTRY_SIZE)
+	#const	ICONDIR_TABLE_SIZE		(ICONDIR_BASE_SIZE + ICONDIRENTRY_SIZE)
 	#const	GRPICONDIRENTRY_SIZE	14
 
-	;変数、ユーザ定義命令・関数　命名規則
+	; 変数、ユーザ定義命令・関数　命名規則
 	;
 	;	外部から呼んではいけない命令・関数		_???
 	;	命令・関数のパラメータ					???_
@@ -70,12 +70,12 @@
 	
 		/* パスチェック */
 		exist	hrtpath_1
-		if strsize = -1 {
+		if (strsize = -1) {
 			return	ERROR_HRT_NOT_EXIST
 		}
 	
 		/* 操作するリソースの言語ID指定 */
-		if (instr(hrtname,, "hsprt") > -1) | (instr(hrtname,, "hsp3c.hrt") > -1) {
+		if ((instr(hrtname,, "hsprt") > -1) | (instr(hrtname,, "hsp3c.hrt") > -1)) {
 			lang_id	= LANG_ID_EN
 		}
 		else {
@@ -85,12 +85,12 @@
 		/* リソース更新 */
 		BeginUpdateResource	hrtpath_1, FALSE
 		hfile	= stat
-		if hfile = NULL {
+		if (hfile = NULL) {
 			return	ERROR_NULL_HANDLE
 		}
-		UpdateResource	hfile, RT_ICON,			HSPEXE_ICON_ID,			lang_id, NULL, 0
-		UpdateResource	hfile, RT_GROUP_ICON,	HSPEXE_GROUPICON_ID,	lang_id, NULL, 0
-		EndUpdateResource	hfile, FALSE;TRUE(cancel)
+		UpdateResource		hfile, RT_ICON,			HSPEXE_ICON_ID,			lang_id, NULL, 0
+		UpdateResource		hfile, RT_GROUP_ICON,	HSPEXE_GROUPICON_ID,	lang_id, NULL, 0
+		EndUpdateResource	hfile, FALSE;TRUE(cancel);
 		
 		return	RESULT_OK
 
@@ -113,21 +113,21 @@
 		bload	ico_path, ico_buf, ico_size
 
 		/* アイコンリソースのサイズを取得 */
-		ret_icon_size_	= (ico_size - ICONDIR_TALBLE_SIZE)
+		ret_icon_size_	= (ico_size - ICONDIR_TABLE_SIZE)
 
 		/* ICONDIRテーブルと切り離して返す */
 		sdim	ret_identry_,	(GRPICONDIRENTRY_SIZE + 1)
 		sdim	ret_icon_,		(ret_icon_size_ + 1)
 		memcpy	ret_identry_,	ico_buf, GRPICONDIRENTRY_SIZE,	0, ICONDIR_BASE_SIZE
 		wpoke	ret_identry_,	(GRPICONDIRENTRY_SIZE - 2),		0
-		memcpy	ret_icon_,		ico_buf, ret_icon_size_,		0, ICONDIR_TALBLE_SIZE
+		memcpy	ret_icon_,		ico_buf, ret_icon_size_,		0, ICONDIR_TABLE_SIZE
 
 		return	RESULT_OK
 
 	/*****************************************/
 	/* HRTファイルにアイコン系リソースを追加 */
 	/*****************************************/
-	#deffunc update_hrt_icon str hrtpath_, array ico_paths_
+	#deffunc update_hrt_icon str hrtpath_, array icopaths_
 
 		ret_update	= RESULT_OK
 		hrtpath_2	= hrtpath_
@@ -155,9 +155,9 @@
 		id_entries		= ""
 		id_entries_size	= 0
 
-		repeat	length(ico_paths_)
+		repeat	length(icopaths_)
 			/* ICOファイルからリソース形式のアイコンとICONDIRENTRYを取得 */
-			ico_path_1	= ico_paths_(cnt)
+			ico_path_1	= icopaths_(cnt)
 			_get_icon_rsrc_and_icondir	ico_path_1, icon, icon_size, identry
 			if (stat = ERROR_ICO_NOT_EXIST) {
 				ret_update	= ERROR_ICO_NOT_EXIST
@@ -188,7 +188,7 @@
 				ret_update	= ERROR_NULL_HANDLE
 				continue
 			}
-			UpdateResource	hfile, RT_ICON,	icon_id, lang_id, varptr(icon), icon_size
+			UpdateResource		hfile, RT_ICON,	icon_id, lang_id, varptr(icon), icon_size
 			EndUpdateResource	hfile, FALSE;TRUE(cancel);
 		loop
 
@@ -206,7 +206,7 @@
 			ret_update	= ERROR_NULL_HANDLE
 			return
 		}
-		UpdateResource	hfile, RT_GROUP_ICON, HSPEXE_GROUPICON_ID, lang_id, varptr(grpicondir), grpicondir_size
+		UpdateResource		hfile, RT_GROUP_ICON, HSPEXE_GROUPICON_ID, lang_id, varptr(grpicondir), grpicondir_size
 		EndUpdateResource	hfile, FALSE;TRUE(cancel);
 
 		return	ret_update

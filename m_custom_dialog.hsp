@@ -1,3 +1,4 @@
+;#startscr "main.hsp"
 /***********************************************************
 
 	「HSPCMP.DLLからのメッセージを表示するためのダイアログ」
@@ -11,17 +12,28 @@
 #const	DLG_WID			400
 #const	DLG_HEI			200
 
-#deffunc ShowMesboxDialog var msg, str cap
+#deffunc _ShowMesboxDialog var msg, str cap
 
-	posx	= ginfo(20) / 2 - DLG_WID / 2
-	posy	= ginfo(21) / 2 - DLG_HEI / 2
-	screen	2, DLG_WID, DLG_HEI, 1, posx, posy
-	title	cap
+	posx	= (ginfo(20) / 2 - DLG_WID / 2)
+	posy	= (ginfo(21) / 2 - DLG_HEI / 2)
+	screen	2, DLG_WID, DLG_HEI, (screen_palette + screen_fixedsize), posx, posy
+	title	(cap + " (Space / Enter / ESC キーで終了)")
 	
 	font	DLG_FONT_NAME, DLG_FONT_SIZE
 	objmode	2, 1
 	mesbox	msg, DLG_WID, DLG_HEI, 0
-	stop
+	repeat
+		stick	keyval
+		switch	keyval
+		case	STICK_SPACE@
+			end
+		case	STICK_ENTER@
+			end
+		case	STICK_ESC@
+			end
+		swend
+		await 1
+	loop
 	return
 
 #global
@@ -32,8 +44,8 @@
 #deffunc ShowLastMesDialog
 
 	notesel		buf
-	noteload	dir_exe + "¥¥" + CHSC_MESFILE_NAME@chspcomp
-	ShowMesboxDialog	buf, "結果レポート"
+	noteload	(dir_exe + "¥¥" + CHSC_MESFILE_NAME@chspcomp)
+	_ShowMesboxDialog	buf, "結果レポート"
 	return
 
 #global
@@ -44,7 +56,7 @@
 #deffunc ShowSymListDialog
 
 	list	= chsc_getsym()
-	ShowMesboxDialog	list, "HSPキーワード一覧"
+	_ShowMesboxDialog	list, "HSPキーワード一覧"
 	return
 
 #global

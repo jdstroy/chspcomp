@@ -2,7 +2,7 @@
 //                                                               //
 // 自作アプリケーション用共通 定数マクロ・汎用関数・サブルーチン //
 //                                                               //
-// 【2007/05/16 更新】                                           //
+// 【2007/12/26 更新】                                           //
 //                                                               //
 ///////////////////////////////////////////////////////////////////
 #ifndef	__H_MYDEF__
@@ -42,12 +42,7 @@
 	#define	ERR_MES_2	"に失敗しました。"
 
 
-	/* アプリケーション名、バージョン文字列 */
-	#define	NAME_APP	"cHspComp"		// アプリケーションごとに書き換え
-	#define	STR_APP_VER	"v.0.4.0"
-
-
-	/* dirlist命令用 */
+	/* dirlist */
 	#define	DIRLIST_MASK_ALL		"*.*"
 
 	#const	DIRLIST_MD_ALL			0	// すべてのファイル
@@ -58,7 +53,7 @@
 	#const	DIRLIST_MD_SYS			6	// 隠し属性・システム属性ファイルのみ
 	#const	DIRLIST_MD_DIRSYS		7	// ディレクトリと隠し属性・システム属性ファイルのみ
 
-	/* getpath命令用 */
+	/* getpath */
 	#const	GETPATH_COPY		0	// コピー
 	#const	GETPATH_NAME		1	// 拡張子を除くファイル名
 	#const	GETPATH_EXT			2	// 拡張子のみ(.???)
@@ -66,19 +61,19 @@
 	#const	GETPATH_LOWCASE		16	// 文字列を小文字に変換する
 	#const	GETPATH_DIR			32	// ディレクトリ情報のみ
 
-	/* vartype命令用 */
+	/* vartype */
 	#const	VARTYPE_STR		2	// 文字列型
 	#const	VARTYPE_FLOAT	3	// 実数型
 	#const	VARTYPE_INT		4	// 整数型
 	#const	VARTYPE_MOD		5	// モジュール型
 
-	/* exec命令用 */
+	/* exec */
 	#const	EXECMODE_NORMAL		0	// 通常
 	#const	EXECMODE_MINIMIZE	2	// 最小化モード
 	#const	EXECMODE_ASSOC		16	// 関連付けされたアプリケーション
 	#const	EXECMODE_PRINT		32	// 指定したファイルを印刷
 
-	/* gettime命令用 */
+	/* gettime */
 	#const	GETTIME_YEAR		0
 	#const	GETTIME_MONTH		1
 	#const	GETTIME_DOW			2
@@ -88,17 +83,48 @@
 	#const	GETTIME_SECOND		6
 	#const	GETTIME_MILISEC		7
 
-	/* gsel命令用 */
+	/* gsel */
 	#const	GSEL_SELECT			0
 	#const	GSEL_ACTIVE			1
 	#const	GSEL_FOREGROUND		2
 	#const	GSEL_HIDE			-1
 
-	/* sysexit命令用 */
+	/* sysexit */
 	#const	SYSEXIT_LOGOFF		0
 	#const	SYSEXIT_REBOOT		1
 	#const	SYSEXIT_SHUTDOWN	2
 	#const	SYSEXIT_POWEROFF	3
+
+	/* fxdir */
+	#const	FXDIR_WINTEMP		-2
+	#const	FXDIR_WINSYS		-1
+	#const	FXDIR_PROGRAMS		2
+	#const	FXDIR_MYDOCS		5	
+	#const	FXDIR_FAVORITES		6
+	#const	FXDIR_STARTUP		7
+	#const	FXDIR_RECENTDOCS	8
+	#const	FXDIR_SENDTO		9
+	#const	FXDIR_STARTMENU		11
+	#const	FXDIR_DESKTOP		16
+	#const	FXDIR_TEMPLATE		21
+	#const	FXDIR_APPDATA		26
+	#const	FXDIR_PRINTER		27
+	#const	FXDIR_INETCACHE		32
+	#const	FXDIR_INETCOOKIE	33
+	#const	FXDIR_INETHISTORY	34
+
+	/* stick */
+	#const	STICK_LEFT		1
+	#const	STICK_UP		2
+	#const	STICK_RIGHT		4
+	#const	STICK_DOWN		8
+	#const	STICK_SPACE		16
+	#const	STICK_ENTER		32
+	#const	STICK_CTRL		64
+	#const	STICK_ESC		128
+	#const	STICK_LBUTTON	256
+	#const	STICK_RBUTTON	512
+	#const	STICK_TAB		1024
 
 
 	/* 引用符 */

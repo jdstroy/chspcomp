@@ -1,66 +1,75 @@
 /***********************************************************
 
-	"hspcmp.dll"ラッパーモジュール
+	追加機能付き"hspcmp.dll"ラッパーモジュール
 
-		【2007/08/21 更新】
+		【2008/01/07 更新】
+
 
 		【使用上の注意】
 
 			処理対象スクリプトが実行ファイル自動作成用に
 　　　　	書かれていることが前提。
 
+
+		【使い方】
+
+			コンパイル
+
+				chsc_ini -> chsc_autocomp
+
+			オブジェクトファイル実行
+
+				chsc_ini -> chsc_run
+
+			コンパイル＋実行
+
+				chsc_ini -> chsc_autocomp -> chsc_run
+
+			実行ファイル作成
+
+				chsc_ini -> chsc_autocomp -> chsc_automake
+
+			キーワード一覧を取得
+
+				chsc_getsym
+
+
 		【命令一覧】
 
 			モジュール初期化
 
 ;			#deffunc chsc_ini str targetpath_, int makeflag_
-				// targetpath_	:	処理対象のスクリプトまたはオブジェクトファイルのフルパス
-				// makeflag_	:	実行ファイルの作成を行う場合は1、それ以外の場合は0を指定
+
+				targetpath_		:	処理対象のスクリプトまたはオブジェクトファイルのフルパス
+				makeflag_		:	実行ファイルの作成を行う場合は1、それ以外の場合は0を指定
 
 
 			実行ファイル自動作成向けのコンパイル
 
-;			#deffunc chsc_autocomp str cmpname_, int dbinfo_flag_, int cmpmode_, int dbwin_flag_
-				// cmpname_			:	作成するオブジェクトファイル名
-				// dbinfo_flag_		:	hsc_comp命令のp1に指定する値
-				// cmpmode_			:	hsc_comp命令のp2に指定する値
-				// dbwin_flag_		:	hsc_comp命令のp3に指定する値
+;			#deffunc chsc_autocomp var cmpname_, int dbsymflag_, int dbinfoflag_, int dbwinflag_, int nomacflag_
+
+				cmpname_		:	作成するオブジェクトファイル名
+				dbsymflag_		:	デバッグシンボルを有効にするかどうか（1=yes or 0=no）
+				dbinfoflag_		:	デバッグ情報を付加するかどうか（1=yes or 0=no）
+				dbwinflag_		:	デバッグウィンドウ常時表示を有効にするかどうか（1=yes or 0=no）
+				nomacflag_		:	拡張マクロを有効にするかどうか（1=yes or 0=no）
 
 
 			オブジェクトファイル実行
 
 ;			#deffunc chsc_run str runopt_
-				// runopt_	:	コマンドラインに付加する起動オプション文字列
+
+				runopt_			:	コマンドラインに付加する起動オプション文字列
 
 
 			実行ファイル自動作成
 
-;			#deffunc chsc_automake int deltmpflag_
-				// deltmpflag_		:	処理終了後packfileとオブジェクトファイルを削除するかどうか（1=yes / 0=no）
+;			#deffunc chsc_automake
 
 
 			キーワード一覧を取得
 
 ;			#defcfunc chsc_getsym
-
-
-		【使い方】
-
-			（コンパイル）
-
-			chsc_ini -> chsc_autocomp
-
-			（オブジェクトファイル実行）
-
-			chsc_ini -> chsc_run
-
-			（実行ファイル作成）
-
-			chsc_ini -> chsc_autocomp -> chsc_automake
-
-			（キーワード一覧を取得）
-
-			chsc_getsym
 
 
 		【依存モジュール】
@@ -81,13 +90,13 @@
 	#const	TRUE				1
 	#const	FALSE				0
 
-	#const	GETPATH_NAME		1	// 拡張子を除くファイル名
-	#const	GETPATH_EXT			2	// 拡張子のみ(.???)
-	#const	GETPATH_REMDIR		8	// ディレクトリ情報を取り除く
-	#const	GETPATH_LOWCASE		16	// 文字列を小文字に変換する
-	#const	GETPATH_DIR			32	// ディレクトリ情報のみ
+	#const	GETPATH_NAME		1	; 拡張子を除くファイル名
+	#const	GETPATH_EXT			2	; 拡張子のみ(.???)
+	#const	GETPATH_REMDIR		8	; ディレクトリ情報を取り除く
+	#const	GETPATH_LOWCASE		16	; 文字列を小文字に変換する
+	#const	GETPATH_DIR			32	; ディレクトリ情報のみ
 
-	/* chsc_autocomp命令パラメータ用（hsc_comp命令用） */
+	/* hsc_comp命令パラメータ用 */
 	#const	NO_HSP3_MACRO		1
 	#const	DEBUG_SYMBOL_FLAG	2
 	#const	AUTO_MAKE_FLAG		4
@@ -109,8 +118,6 @@
 	/* chsc_automake */
 	#const	MAKE_OK				0
 	#const	MAKE_ERR			1
-	#define	OBJ_NAME_S			"start.ax"
-	#define	OBJ_NAME_O			"obj"
 	#define	OBJ_EXT				".ax"
 
 	;変数、ユーザ定義命令・関数　命名規則
@@ -126,7 +133,7 @@
 #defcfunc _chsc_getmes
 
 	hsc3_messize	len
-	sdim getmesbuf, len + 1
+	sdim	getmesbuf, (len + 1)
 	hsc_getmes		getmesbuf
 	return	getmesbuf
 
@@ -136,52 +143,56 @@
 #deffunc _chsc_savemes
 
 	savemesbuf	= _chsc_getmes()
-	if savemesbuf ! "" {
+	if (savemesbuf ! "") {
 		notesel		savemesbuf
-		notesave	dir_exe + "¥¥" + CHSC_MESFILE_NAME
+		notesave	(dir_exe + "¥¥" + CHSC_MESFILE_NAME)
 	}
 	return
 
 /**********************************************************/
 // 実行ファイル自動作成向けのコンパイル
 /**********************************************************/
-#deffunc chsc_autocomp str cmpname_, int dbinfoflag_, int cmpmode_, int dbwinflag_
+#deffunc chsc_autocomp var cmpname_, int dbsymflag_, int dbinfoflag_, int dbwinflag_, int nomacflag_
 
-	chdir	_targetdir
-
-	/* オブジェクトファイル名指定 */
-	hsc_objname	cmpname_
-	_objname	= cmpname_
-
-	/* 古いpackfileを削除 */
-	oldfilepath	= _targetdir + "packfile"
-	exist	oldfilepath
-	if strsize > -1 {
-		delete	oldfilepath
+	/* コンパイルモード設定 */
+	cmpmode	= AUTO_MAKE_FLAG@chspcomp
+	if dbsymflag_ {
+		cmpmode	+= DEBUG_SYMBOL_FLAG
+	}
+	if nomacflag_ {
+		cmpmode	+= NO_HSP3_MACRO
 	}
 
-;	/* 古いiファイルを削除 */
-;	oldfilepath	= _targetdir + _scrname + ".i"
-;	exist	oldfilepath
-;	if strsize > -1 {
-;		delete	oldfilepath
-;	}
-;
+	/* オブジェクトファイル名指定 */
+	if (cmpname_ = "") {
+		cmpname_	= (getpath(_scrname, GETPATH_NAME) + OBJ_EXT)	; スクリプト名＋".ax"
+	}
+	_objname	= cmpname_
+
 	/* 古いオブジェクトファイルを削除 */
-	oldfilepath	= _targetdir + cmpname_
-	exist	oldfilepath
-	if strsize > -1 {
-		delete	oldfilepath
+	objpath	= (_targetdir + _objname)
+	exist	objpath
+	if (strsize > -1) {
+		delete	objpath
+	}
+
+	/* 古いpackfileを削除 */
+	packpath	= (_targetdir + "packfile")
+	exist	packpath
+	if (strsize > -1) {
+		delete	packpath
 	}
 
 	/* コンパイル実行 */
+	chdir		_targetdir
+	hsc_objname	_objname
 	hsc_clrmes
-	hsc_comp	dbinfoflag_, cmpmode_, dbwinflag_
+	hsc_comp	dbinfoflag_, cmpmode, dbwinflag_
 	_chsc_savemes
 
 	/* 結果チェック */
-	exist	oldfilepath
-	if strsize = -1 {
+	exist	objpath
+	if (strsize = -1) {
 		return	COMP_ERR
 	}
 	return	COMP_OK
@@ -191,21 +202,28 @@
 /**********************************************************/
 #deffunc chsc_run str runopt_
 
+	/* 起動オプション（コマンドラインパラメータ）の選択 */
+	if (_runopt = "") {
+		runopt	= runopt_					; コマンドラインで指定されたもの
+	}
+	else {
+		runopt	= _runopt					; スクリプトに埋め込まれていたもの
+	}
+
 	chdir	_targetdir
 
 	/* ランタイム名取得 */
-	rtname	= ""							// 明示的に文字列変数を用意しないとだめ
-	hsc3_getruntime	rtname, _objname		// #runtime命令で指定されたもののみ取得可
-
-	/* コマンドライン生成 */
-	if rtname = "" {
+	rtname	= ""							; 明示的に文字列変数を用意しないとだめ
+	hsc3_getruntime	rtname, _objname		; #runtime命令で指定されたもののみ取得可
+	if (rtname = "") {
 		rtname	= DEF_RTEXENAME
 	}
-	cmdline	= "¥"" + dir_exe + "¥¥" + rtname + "¥" " + _objname		// 変数に入れないとだめ
-	if runopt_ ! "" {
-		cmdline	+= " "
+
+	/* コマンドライン生成 */
+	cmdline	= ("¥"" + dir_exe + "¥¥" + rtname + "¥" " + _objname)	; 変数に入れないとだめ（hsc3_run）
+	if (runopt ! "") {
+		cmdline	+= " " + runopt
 	}
-	cmdline	+= runopt_
 
 	/* 実行 */
 	hsc_clrmes
@@ -214,134 +232,146 @@
 	return
 
 /**********************************************************/
-// プリプロセッサで指定されているhspcmp関連オプションの値（文字列）を取得
+// cHspComp専用命令またはプリプロセッサで指定されている値（文字列のみ）を取得
+//   [(命令) (オプション名) "(値)"] 形式、または
+//   [(命令) "(値)"] 形式のもののみに使える。
 /**********************************************************/
-#deffunc _chsc_gethspcmpopt str scrpath_, str ppcmd_, str optname_, array ret_optvals_, int repeatflag_
+#deffunc _chsc_getppvals str scrpath_, str ppcmd_, str optname_, array ret_ppvals_, int repeatflag_
+	; scrpath_			処理対象スクリプトパス
+	; ppcmd_			対象のプリプロセッサ命令（#を含む）
+	; optname_			オプション名（ない場合""を指定する）
+	; ret_ppvals_		戻り値（取得した値。""除去済み）
+	; repeatflag_		ファイル内で命令が複数使われていた時にすべての値を
+	;					取得するなら1、最初の一つだけなら0を指定する
 
 	/* スクリプト読み込み */
 	notesel		scrbuf
 	noteload	scrpath_
 
 	/* 検索 */
-	optval	= ""
-	sdim	ret_optvals_, 64, 1
-	validx	= 0
+	ppval		= ""
+	sdim		ret_ppvals_, 64, 1
+	ppval_cnt	= 0
 
 	repeat noteinfo(0)
 		noteget	linestr, cnt
-		if linestr = "" {
+		if (linestr = "") {
 			continue
 		}
 
 		/* プリプロセッサ命令を探す */
-		i	= instr(linestr, 0, ppcmd_)
-		if i = -1 {
+		pp_idx	= instr(linestr, 0, ppcmd_)
+		if (pp_idx = -1) {
 			continue
 		}
-		char_i_1	=	instr(linestr, 0, ";")	// 
-		char_i_2	=	instr(linestr, 0, "/")	// プリプロセッサ命令の前に
-		if (char_i_1 > -1) & (char_i_1 < i) {	// 
-			continue							// コメント記号らしきものが
-		}										// 
-		if (char_i_2 > -1) & (char_i_2 < i) {	// あったらその行は無視
-			continue							// 
-		}										// 
-		offset	= (i + strlen(ppcmd_))
+
+		/* 命令の前にタブと1バイトスペース以外のものがあったらその行は無視 */
+		idx	= 0
+*@
+		if (idx >= pp_idx) {
+			goto	*@f		; 処理続行
+		}
+		byte	= peek(linestr, idx)
+		if ((byte ! ' ') & (byte ! '¥t')) {
+			continue		; この行の処理は終了
+		}
+		idx		++
+		goto	*@b
+*@
+
+		offset	= (pp_idx + strlen(ppcmd_))
 
 		/* オプション名を探す */
-		if optname_ = "" {
-			goto *@f
+		if (optname_ ! "") {
+			optname_idx	= instr(linestr, offset, optname_)
+			if (optname_idx = -1) {
+				continue
+			}
+			offset	+=	(optname_idx + strlen(optname_))
 		}
-		i2	= instr(linestr, offset, optname_)
-		if i2 = -1 {
-			continue
-		}
-		offset	+=	(i2 + strlen(optname_))
-*@
-		/* オプション値を探す */
-		i3		=	instr(linestr, offset, "¥"")
-		if i3 = -1 {
-			continue
-		}
-		offset	+=	i3 + strlen("¥"")
-		getstr	optval, linestr, offset, '"'
-		ret_optvals_(validx)	= optval
 
-		if repeatflag_ = FALSE {
+		/* 定義値を探す */
+		ppval_idx		=	instr(linestr, offset, "¥"")
+		if (ppval_idx = -1) {
+			continue
+		}
+		offset	+=	(ppval_idx + strlen("¥""))
+		getstr	ppval, linestr, offset, '"'
+		ret_ppvals_(ppval_cnt)	= ppval
+
+		/* 複数取得フラグチェック */
+		if (repeatflag_ = FALSE) {
 			break
 		}
 		else {
-			validx	++
+			ppval_cnt	++
 		}
 	loop
 	return
 
 /**********************************************************/
-// スクリプトで指定されている実行ファイル名を含むパスを取得
+// スクリプトで指定されている実行ファイル名を含むパスを生成
 /**********************************************************/
 #defcfunc _chsc_getexepath
 
-	_chsc_gethspcmpopt (_targetdir + _scrname), "#packopt", "name", exename, FALSE
-	if exename = "" {
+	_chsc_getppvals (_targetdir + _scrname), "#packopt", "name", exename, FALSE
+	if (exename = "") {
 		exename	= DEF_EXENAME
 	}
 	else {
-		if getpath(exename, 2) ! EXE_EXT {
+		if (getpath(getpath(exename, GETPATH_EXT), GETPATH_LOWCASE) ! EXE_EXT) {
 			exename	+= EXE_EXT
 		}
 	}
-	return	_targetdir + exename
+	return	(_targetdir + exename)
 
 /**********************************************************/
 // 実行ファイル自動作成
 /**********************************************************/
-#deffunc chsc_automake int deltmpflag_
+#deffunc chsc_automake; int deltmpflag_
 
 	/* 古い実行ファイルを削除 */
-	path	= _chsc_getexepath()
-	exist	path
-	if strsize > -1 {
-		delete	path
+	exepath	= _chsc_getexepath()
+	exist	exepath
+	if (strsize > -1) {
+		delete	exepath
 	}
 
 	/* 実行ファイル作成 */
 	hsc_clrmes
-	hsc3_make	dir_exe + "¥¥runtime"
+	hsc3_make	(dir_exe + "¥¥runtime")
 	_chsc_savemes
 
 	/* 実行ファイルの存在を確認 */
-	exist	path
-	if strsize = -1 {
+	exist	exepath
+	if (strsize = -1) {
 		return	MAKE_ERR
 	}
 
-	if deltmpflag_ {
-		/* packfileを削除 */
-		path	= _targetdir + "packfile"
-		exist	path
-		if strsize > -1 {
-			delete	path
-		}
-		/* オブジェクトファイルを削除 */
-		repeat 3
-			switch	cnt
-			case	0
-				objname	= OBJ_NAME_S
-				swbreak
-			case	1
-				objname	= OBJ_NAME_O
-				swbreak
-			case	2
-				objname	= getpath(_scrname, GETPATH_NAME) + OBJ_EXT
-				swbreak
-			swend
-			path	= _targetdir + objname
-			exist	path
-			if strsize > -1 {
-				delete	path
-			}
-		loop
+	/* packfileを削除 */
+	packpath	= (_targetdir + "packfile")
+	exist	packpath
+	if (strsize > -1) {
+		delete	packpath
 	}
+
+	/* オブジェクトファイルを削除 */
+	objpath	= (_targetdir + _objname)
+	exist	objpath
+	if (strsize > -1) {
+		delete	objpath
+	}
+
+	/* 一時スクリプトとカスタムランタイムを削除 */
+	exist	_tmprtpath
+	if (strsize > -1) {
+		delete	_tmprtpath
+	}
+	exist	_tmpscrpath
+	if (strsize > -1) {
+		delete	_tmpscrpath
+	}
+
 	return	MAKE_OK
 
 /**********************************************************/
@@ -349,22 +379,51 @@
 /**********************************************************/
 #deffunc chsc_ini str targetpath_, int makeflag_
 
-	_targetdir	= getpath(targetpath_, GETPATH_DIR)	// スクリプトまたはオブジェクトファイルがあるフォルダを取得（"¥¥"付き）
-	_tmprtpath	= ""
-	_tmpscrpath	= ""
+	targetpath	= targetpath_
+	_targetdir	= ""	; スクリプトまたはオブジェクトファイルがあるフォルダ（"¥¥"付き）
+	_scrname	= ""	; 処理対象スクリプト名
+	_objname	= ""	; 処理対象オブジェクトファイル名
+	_tmprtpath	= ""	; カスタムアイコンを埋め込んだカスタムランタイムのパス（必要であれば）
+	_tmpscrpath	= ""	; カスタムランタイムを使う命令を追加した一時スクリプトのパス（必要であれば）
+	_runopt		= ""	; オブジェクトファイルを実行するときの起動オプション
 
-	ext = getpath(getpath(targetpath_, GETPATH_EXT), GETPATH_LOWCASE)
-	if (ext = ".as") | (ext = ".hsp") {		; コンパイルを含む処理
-		_scrname	= getpath(targetpath_, GETPATH_REMDIR)
-		_objname	= ""
-		if makeflag_ = FALSE {				; 実行ファイル作成は行わない
+	ext = getpath(getpath(targetpath, GETPATH_EXT), GETPATH_LOWCASE)
+	if ((ext = ".as") | (ext = ".hsp")) {		; コンパイルを含む処理
+
+		/* スクリプトフォルダとスクリプト名設定 */
+		_chsc_getppvals targetpath, ";#startscr", "", scrpath, FALSE	; 対象スクリプト変更命令チェック
+		if (scrpath ! "") {		; 指定されている
+			if instr(scrpath, 0, ":") = -1 {	; フルパスではないっぽい
+				_targetdir	= getpath(targetpath, GETPATH_DIR)
+				_scrname	= scrpath
+			}
+			else {
+				_targetdir	= getpath(scrpath, GETPATH_DIR)
+				_scrname	= getpath(scrpath, GETPATH_REMDIR)
+			}
+		}
+		else {
+			_targetdir	= getpath(targetpath, GETPATH_DIR)
+			_scrname	= getpath(targetpath, GETPATH_REMDIR)
+		}
+
+		/* スクリプト内に埋め込まれた起動オプションを取得 */
+		filebuf		= ""
+		notesel		filebuf
+		noteload	(_targetdir + _scrname)
+		noteget		linestr, 0
+		if (instr(linestr, 0, ";! ") = 0) {
+			getstr	_runopt, linestr, 3
+		}
+
+		if (makeflag_ = FALSE) {				; 実行ファイル作成は行わない
 			hsc_ini		_scrname
 			return
 		}
 	}
 	else {									; オブジェクトファイルの実行のみ
-		_scrname	= ""
-		_objname	= getpath(targetpath_, GETPATH_REMDIR)
+		_targetdir	= getpath(targetpath, GETPATH_DIR)
+		_objname	= getpath(targetpath, GETPATH_REMDIR)
 		return
 	}
 
@@ -374,57 +433,58 @@
 	// さらにそのスクリプトをコンパイル対象として設定                 //
 
 	/* スクリプト内のアイコンリソース指定を取得 */
-	_chsc_gethspcmpopt (_targetdir + _scrname), ";#makeopt", "icon_rsrc", iconames, TRUE
+	_chsc_getppvals (_targetdir + _scrname), ";#makeopt", "icon_rsrc", iconames, TRUE
 	repeat	length(iconames)
-		if iconames(cnt) ! "" {
-			if instr(iconames(cnt), 0, ":") = -1 {	; フルパスではないっぽい
-				iconames(cnt)	= (_targetdir + iconames(cnt))	; フルパスに
+		if (iconames(cnt) ! "") {
+			if (instr(iconames(cnt), 0, ":") = -1) {			; フルパスではないっぽい
+				iconames(cnt)	= (_targetdir + iconames(cnt))		; フルパスに
 			}
 		}
 	loop
 
-	if iconames(0) ! "" {		; アイコンが最低1つ指定されている
+	if (iconames(0) ! "") {			; アイコンが最低1つ指定されている
+
 		/* 使用ランタイム指定を取得 */
-		_chsc_gethspcmpopt (_targetdir + _scrname), "#packopt", "runtime", rtname_2, FALSE
+		_chsc_getppvals (_targetdir + _scrname), "#packopt", "runtime", rtname_2, FALSE
+		if (rtname_2 = "") {		; #packoptでは指定されていない
 
-		if rtname_2 = "" {		; #packoptでは指定されていない
-			_chsc_gethspcmpopt (_targetdir + _scrname), "#runtime", "", rtname_2, FALSE
-
-			if rtname_2 = "" {		; #runtimeでも指定されていない
+			_chsc_getppvals (_targetdir + _scrname), "#runtime", "", rtname_2, FALSE
+			if (rtname_2 = "") {	; #runtimeでも指定されていない
 				rtname_2	= "hsprt"
-				rtdirpath	= dir_exe + "¥¥"
+				rtdirpath	= (dir_exe + "¥¥")
 			}
 			else {
-				if getpath(rtname_2, GETPATH_EXT) = "" {
+				if (getpath(rtname_2, GETPATH_EXT) = "") {
 					rtname_2	+= ".hrt"
 				}
-				rtdirpath	= dir_exe + "¥¥runtime¥¥"
+				rtdirpath	= (dir_exe + "¥¥runtime¥¥")
 			}
 		}
 		else {
-			rtdirpath	= dir_exe + "¥¥runtime¥¥"
+			rtdirpath	= (dir_exe + "¥¥runtime¥¥")
 		}
 
 		/* コンソールランタイムが指定されていたら書き換えは行わない */
-		if rtname_2 = "hsp3cl.hrt" {
+		if (rtname_2 = "hsp3cl.hrt") {
 			goto *@f
 		}
 
 		/* ランタイムを"_(ランタイム名)"という名前で同じ場所にコピー */
-		_tmprtpath	= rtdirpath + "_" + rtname_2
-		bcopy	rtdirpath + rtname_2, _tmprtpath
+		_tmprtpath	= (rtdirpath + "_" + rtname_2)
+		bcopy	(rtdirpath + rtname_2), _tmprtpath
 
 		/* カスタムランタイムのアイコンを書き換え */
 		update_hrt_icon		_tmprtpath, iconames
 	
 		/* スクリプトを"_(スクリプト名)"という名前で同じ場所にコピー */
-		_tmpscrpath	= _targetdir + "_" + _scrname
-		bcopy	_targetdir + _scrname, _tmpscrpath
+		_tmpscrpath	= (_targetdir + "_" + _scrname)
+		bcopy	(_targetdir + _scrname), _tmpscrpath
 
 		/* 一時スクリプトのランタイム指定を書き換え */
+		filebuf		= ""
 		notesel		filebuf
 		noteload	_tmpscrpath
-		filebuf		+= "¥n#packopt runtime " + "¥"_" + rtname_2 + "¥""
+		filebuf		+= ("¥n#packopt runtime " + "¥"_" + rtname_2 + "¥"")
 		notesave	_tmpscrpath
 
 		/* 一時スクリプトをコンパイル対象に設定 */
@@ -432,6 +492,7 @@
 		return
 	}
 *@
+
 	hsc_ini	_scrname
 	return
 
@@ -444,22 +505,6 @@
 	hsc3_getsym
 	keywords	= _chsc_getmes()
 	return	keywords
-
-/**********************************************************/
-// 終了処理
-/**********************************************************/
-#deffunc chsc_finalize onexit
-
-	/* 一時スクリプトとカスタムランタイムを削除 */
-	exist	_tmprtpath
-	if strsize > -1 {
-		delete	_tmprtpath
-	}
-	exist	_tmpscrpath
-	if strsize > -1 {
-		delete	_tmpscrpath
-	}
-	return
 
 /**********************************************************/
 #global
