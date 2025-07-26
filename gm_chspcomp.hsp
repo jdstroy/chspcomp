@@ -72,7 +72,7 @@
 	savebuf = chsc_getmes()
 	if savebuf!"" {
 		notesel savebuf
-		notesave dir_exe+"¥¥"+CHSC_MESFILE_NAME
+		notesave dir_exe+"\\"+CHSC_MESFILE_NAME
 	}
 	return
 
@@ -103,7 +103,7 @@
 		if i2=-1 {							// "name"がない	
 			continue
 		}
-		i3 = instr(linestr,i,"¥"")
+		i3 = instr(linestr,i,"\"")
 		if i2>i3 {							// "¥""の前に"name"がない
 			continue
 		}
@@ -165,7 +165,7 @@
 	if runopt!"" {
 		runopt = " "+runopt
 	}
-	cline = "¥""+dir_exe+"¥¥"+rtname+"¥" "+mObjname+runopt	// 変数に入れないとだめ
+	cline = "\""+dir_exe+"\\"+rtname+"\" "+mObjname+runopt	// 変数に入れないとだめ
 	/* 実行 */
 	hsc_clrmes
 	hsc3_run cline
@@ -184,7 +184,7 @@
 	}
 	/* 実行ファイル作成 */
 	hsc_clrmes
-	hsc3_make dir_exe+"¥¥runtime"
+	hsc3_make dir_exe+"\\runtime"
 	chsc_savemes
 	/* 実行ファイルの存在を確認 */
 	exist path
